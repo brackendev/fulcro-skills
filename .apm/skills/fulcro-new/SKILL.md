@@ -404,8 +404,8 @@ Next steps:
     user=> (start)                              # Start the Jetty server
   open http://localhost:8000                    # Dev HTTP server
 
-Run /fulcro-skills:fulcro-check to run the full quality pipeline.
-Run /clojure-skills:clj-check for the host-neutral checks.
+Run /fulcro-check to run the full quality pipeline.
+Run /clj-check for the host-neutral checks.
 ```
 
 ## Gotchas

@@ -9,13 +9,13 @@ disable-model-invocation: true
 
 # Fulcro Smells Review (Placeholder)
 
-This skill is a placeholder. Fulcro-specific code review against a curated smells catalog is planned but not yet implemented. Running `/fulcro-skills:fulcro-smells-review` today shows this notice and exits.
+This skill is a placeholder. Fulcro-specific code review against a curated smells catalog is planned but not yet implemented. Running `/fulcro-smells-review` today shows this notice and exits.
 
 ## Status
 
-**Not implemented.** A Fulcro-specific smells catalog is pending. The host-neutral [clj-smells catalog](https://github.com/nufuturo-ufcg/clj-smells-catalog) covered by `/clojure-skills:clj-smells-review` already catches cross-dialect smells in the `.clj`, `.cljc`, and `.cljs` files of a Fulcro project, but it does not flag the framework-specific failure modes that come from ident hygiene, query / state-shape drift, mutation section confusion, transit serialization hazards, and unnecessary re-renders.
+**Not implemented.** A Fulcro-specific smells catalog is pending. The host-neutral [clj-smells catalog](https://github.com/nufuturo-ufcg/clj-smells-catalog) covered by `/clj-smells-review` already catches cross-dialect smells in the `.clj`, `.cljc`, and `.cljs` files of a Fulcro project, but it does not flag the framework-specific failure modes that come from ident hygiene, query / state-shape drift, mutation section confusion, transit serialization hazards, and unnecessary re-renders.
 
-For host-neutral smells, run `/clojure-skills:clj-smells-review`. For ClojureScript-specific smells, watch for the future `/clojurescript-skills:cljs-smells-review`. This skill will complement both with Fulcro-specific checks once the catalog is curated.
+For host-neutral smells, run `/clj-smells-review`. For ClojureScript-specific smells, watch for the future `/cljs-smells-review`. This skill will complement both with Fulcro-specific checks once the catalog is curated.
 
 ## Planned Categories
 
@@ -46,8 +46,8 @@ When invoked, print this notice and exit:
 fulcro-smells-review is not yet implemented.
 
 A Fulcro-specific smells catalog is in development. For now:
-  - Run /clojure-skills:clj-smells-review for host-neutral smells in .clj, .cljc, and .cljs files.
-  - Run /fulcro-skills:fulcro-check for lint, format, test, advanced-compilation, and duplicate-form checks.
+  - Run /clj-smells-review for host-neutral smells in .clj, .cljc, and .cljs files.
+  - Run /fulcro-check for lint, format, test, advanced-compilation, and duplicate-form checks.
   - The fulcro skill (auto-invoked) covers idiomatic Fulcro components, idents, queries, mutations, loads, routing, forms, UI state machines, and the Pathom 3 server.
 
 To track progress, see TODO.md in the fulcro-skills repo.

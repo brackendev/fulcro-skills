@@ -56,7 +56,7 @@ clj -M:cljfmt fix
 
 Report pass if exit code is 0, fail otherwise. Show any formatting changes.
 
-The project's `.cljfmt.edn` should include indentation entries for Fulcro macros (`defsc`, `defmutation`, `defrouter`, `defresolver`). The `/fulcro-skills:fulcro-new` skill writes them; older projects may need to be updated.
+The project's `.cljfmt.edn` should include indentation entries for Fulcro macros (`defsc`, `defmutation`, `defrouter`, `defresolver`). The `/fulcro-new` skill writes them; older projects may need to be updated.
 
 ### 3. Test
 

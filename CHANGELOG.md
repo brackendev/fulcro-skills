@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## 0.1.1
+
+### Fixed
+
+- Remove Claude Code-specific `<package>:` namespace prefix from slash commands referenced inside skill bodies. The neutral form (`/fulcro-check`, `/fulcro-new`, `/fulcro-smells-review`, `/clj-check`, `/clj-smells-review`, `/cljs-smells-review`) resolves correctly on every runtime APM deploys to, matching the form already used in `README.md`.
+
 ## 0.1.0
 
 ### Added

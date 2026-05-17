@@ -66,7 +66,7 @@ If the dependency resolution fails, revert the `:mvn/version` in `deps.edn` to t
 
 ### 5. Compile and Test
 
-Run the ClojureScript build (development compile is enough as a sanity check; the `/fulcro-skills:fulcro-check advanced` step covers the production build separately):
+Run the ClojureScript build (development compile is enough as a sanity check; the `/fulcro-check advanced` step covers the production build separately):
 
 ```bash
 npx shadow-cljs compile main
@@ -108,7 +108,7 @@ Fulcro upgraded:
   clj-kondo imports: refreshed
 
 Recommended next steps:
-  /fulcro-skills:fulcro-check advanced   # Production-build sanity check with externs inference
+  /fulcro-check advanced   # Production-build sanity check with externs inference
   Smoke test Fulcro Inspect in the browser
   Re-run any forms / load flows that exercise Fulcro internals
 ```

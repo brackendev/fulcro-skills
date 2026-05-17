@@ -1,5 +1,5 @@
 name: fulcro-skills
-version: 0.1.0
+version: 0.1.1
 description: Fulcro full-stack framework toolkit covering defsc components, idents and the normalized client database, mutations, df/load!, dynamic routing, forms, UI state machines, Fulcro Inspect, the Pathom 3 server, scaffolding, quality checks, upgrades, code-lenses translation, and a smells-review placeholder. Layers on top of clojure-skills, clojurescript-skills, and clojure-jvm-skills.
 author: Bracken Spencer
 license: MIT
