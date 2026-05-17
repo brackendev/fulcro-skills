@@ -1,0 +1,13 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "skill": {
+      "fulcro": "allow",
+      "fulcro-lenses": "allow",
+      "fulcro-new": "allow",
+      "fulcro-check": "allow",
+      "fulcro-upgrade": "allow",
+      "fulcro-smells-review": "allow"
+    }
+  }
+}

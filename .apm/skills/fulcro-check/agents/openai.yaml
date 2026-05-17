@@ -1,0 +1,8 @@
+interface:
+  display_name: "Fulcro Quality Check"
+  short_description: "Run the Fulcro quality pipeline (lint, format, test, advanced, dry)."
+  default_prompt: "Run the Fulcro quality pipeline."
+  brand_color: "#009E9E"
+
+policy:
+  allow_implicit_invocation: false

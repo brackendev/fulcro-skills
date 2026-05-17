@@ -1,0 +1,8 @@
+interface:
+  display_name: "Fulcro Lenses"
+  short_description: "Translate code-lenses philosophies into Fulcro-specific patterns. Defaults: grug, Honest Code, Tidy First, Parse Don't Validate; APOSD and Legacy Code are opt-in."
+  default_prompt: "Apply the relevant code-lenses translation to this Fulcro code."
+  brand_color: "#009E9E"
+
+policy:
+  allow_implicit_invocation: true
