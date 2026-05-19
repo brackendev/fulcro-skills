@@ -5,7 +5,7 @@
       "fulcro": "allow",
       "fulcro-lenses": "allow",
       "fulcro-new": "allow",
-      "fulcro-check": "allow",
+      "fulcro-tidy": "allow",
       "fulcro-upgrade": "allow",
       "fulcro-smells-review": "allow"
     }

@@ -2,6 +2,19 @@
 
 ## [Unreleased]
 
+## 0.1.2
+
+### Added
+
+- A repo-root `CONVENTIONS.md` that defines the argument grammar, scope vocabulary, and mutation defaults every user-invocable skill in this package follows. Three rules cover argument grammar (one sanctioned flag, `--report`), scope vocabulary (`(no argument)`, `all`, `<path>`), and mutation-as-default. The document lists `/fulcro-new` as the standard's positional-required exemption and includes an author checklist that runs against every migrated skill.
+
+### Changed
+
+- The `fulcro-check` skill is renamed to `fulcro-tidy`. The verb now matches the default behavior: `cljfmt fix` runs by default and rewrites files in the `format` step. Operators with a saved `/fulcro-check` invocation should replace it with `/fulcro-tidy`. The new `--report` flag swaps the format step for `cljfmt check`, which previews diffs without writing; `lint`, `test`, `advanced`, and `dry` are pure-read of source regardless. The `advanced` step still writes build output under `resources/public/js/` (shadow-cljs release), which is a build artifact, not source. Breaking for saved `/fulcro-check` invocations.
+- The `fulcro-new` skill gains a `## Arguments` section that documents its positional `<project-name>` exemption and a `## Mutation` section that lists the files it writes. The "Next steps" footer in the scaffold output now points at `/fulcro-tidy` and `/clj-tidy` instead of the renamed-away `/fulcro-check` and `/clj-check`.
+- The `fulcro-upgrade` skill gains a `## Arguments` section, a `## Mutation` section, and a `--report` flag. With `--report`, the skill prints the current and latest released versions for each Fulcro artifact found in `deps.edn` and surfaces the upstream `CHANGELOG.adoc` for major version jumps without writing `deps.edn`, refreshing dependencies, or running the compile and tests. The skill's recommended-next-steps and sanity-check comments now point at `/fulcro-tidy` rather than the renamed-away `/fulcro-check`.
+- The `fulcro-smells-review` placeholder gains a canonical `## Arguments` section using the core scope vocabulary (`(no argument)`, `all`, `<path>`) and an explicit pure-report classification ahead of the eventual implementation. The "not yet implemented" notice now points at `/fulcro-tidy` instead of `/fulcro-check`.
+
 ## 0.1.1
 
 ### Fixed

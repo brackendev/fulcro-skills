@@ -1,10 +1,7 @@
 ---
 name: fulcro-upgrade
-description: >-
-  Upgrade Fulcro to the latest released version. Use when the user asks to
-  upgrade, update, or bump Fulcro, deps.edn Fulcro version, or the
-  `com.fulcrologic/fulcro` dependency. Optionally bumps Fulcro RAD and
-  Guardrails alongside.
+description: Upgrade the Fulcro dependency in deps.edn to the latest released version and verify the project compiles and tests pass
+argument-hint: "[--report] [all]"
 user-invocable: true
 disable-model-invocation: true
 ---
@@ -13,11 +10,29 @@ disable-model-invocation: true
 
 Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest released version on Clojars and verify the project still compiles and passes tests. Optionally bump `com.fulcrologic/fulcro-rad` and `com.fulcrologic/guardrails` in the same pass.
 
+See `CONVENTIONS.md` in the repo root for the argument grammar this skill follows.
+
+## Arguments
+
+| Input         | Target                                                                       |
+|---------------|------------------------------------------------------------------------------|
+| (no argument) | Bump `:mvn/version` for `com.fulcrologic/fulcro` (and `fulcro-rad`, `guardrails` if present) in `deps.edn`, then refresh dependencies, compile, and run tests |
+| `all`         | Same as (no argument); accepted for family consistency                       |
+| `--report`    | Print the current and latest released versions for each Fulcro artifact found in `deps.edn`. Surface the upstream `CHANGELOG.adoc` for major version jumps. No writes, no compile, no tests |
+
+The skill rewrites version strings in a single `deps.edn`. `<path>` rows are not part of the standard scope vocabulary for this skill because the target is fixed.
+
+## Mutation
+
+Mutates `deps.edn` by default, replacing the `:mvn/version` value for `com.fulcrologic/fulcro`, and for `com.fulcrologic/fulcro-rad` and `com.fulcrologic/guardrails` when present. Refreshes dependencies with `clj -P`, compiles the ClojureScript client with `npx shadow-cljs compile main`, runs the test suites, and refreshes clj-kondo imports. On compile or test failure, the skill reverts every version change in `deps.edn` to the recorded original values. With `--report`, the skill writes nothing and runs no compile or tests.
+
 ## Prerequisites
 
 Verify `deps.edn` exists in the current directory and contains a `com.fulcrologic/fulcro` dependency. If not, stop and tell the user.
 
 ## Steps
+
+Parse `$ARGUMENTS` to determine whether `--report` is present.
 
 ### 1. Record Current Versions
 
@@ -41,6 +56,18 @@ curl -sSL -A 'Mozilla/5.0' \
 Repeat for `fulcro-rad` and `guardrails` only if they are in `deps.edn`.
 
 If a network call fails, ask the user for the target versions rather than guessing. Do not invent a version number.
+
+If `--report` is present, print the previous and latest versions for each artifact found and stop without writing `deps.edn`, refreshing dependencies, or running the compile and tests:
+
+```
+Fulcro upgrade report:
+  com.fulcrologic/fulcro:       <current> -> <latest>
+  com.fulcrologic/fulcro-rad:   <current> -> <latest>   (or "not present")
+  com.fulcrologic/guardrails:   <current> -> <latest>   (or "not present")
+  com.wsscode/pathom3:          <current> (informational only)
+```
+
+For any major version jump between current and latest, also surface the relevant section of the upstream `CHANGELOG.adoc` (fetch as described in step 3). Do not auto-apply or write.
 
 ### 3. Compare and Update
 
@@ -66,7 +93,7 @@ If the dependency resolution fails, revert the `:mvn/version` in `deps.edn` to t
 
 ### 5. Compile and Test
 
-Run the ClojureScript build (development compile is enough as a sanity check; the `/fulcro-check advanced` step covers the production build separately):
+Run the ClojureScript build (development compile is enough as a sanity check; the `/fulcro-tidy advanced` step covers the production build separately):
 
 ```bash
 npx shadow-cljs compile main
@@ -108,7 +135,7 @@ Fulcro upgraded:
   clj-kondo imports: refreshed
 
 Recommended next steps:
-  /fulcro-check advanced   # Production-build sanity check with externs inference
+  /fulcro-tidy advanced    # Production-build sanity check with externs inference
   Smoke test Fulcro Inspect in the browser
   Re-run any forms / load flows that exercise Fulcro internals
 ```

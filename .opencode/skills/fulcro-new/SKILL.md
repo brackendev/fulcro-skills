@@ -10,6 +10,19 @@ disable-model-invocation: true
 
 Create a new [Fulcro](https://github.com/fulcrologic/fulcro) full-stack project with a ClojureScript client (shadow-cljs build), a Clojure JVM server (Pathom 3 parser, Ring + Jetty), `clj-kondo` lint setup, `cljfmt` formatting, and a development REPL. The layout mirrors the canonical [`fulcro-template`](https://github.com/fulcrologic/fulcro-template) structure.
 
+## Arguments
+
+| Input             | Target                                                                       |
+|-------------------|------------------------------------------------------------------------------|
+| `<project-name>`  | Required. Use hyphens (for example, `my-app`); the skill maps to underscores for file paths (`my_app/`) and keeps hyphens in namespace symbols. |
+| (no argument)     | Prompt the operator for a project name.                                      |
+
+This skill is exempt from the `all` and `<path>` rows of the standard scope vocabulary because scaffolding has no useful default scope. See `CONVENTIONS.md` in the repo root for the standard.
+
+## Mutation
+
+Mutates by default: creates the project directory and writes `deps.edn`, `shadow-cljs.edn`, `package.json`, the client entry files (`app.application`, `app.client`, `app.ui.root`, `app.model.session`), the server files (`app.server.main`, `app.server.pathom`, `app.server.middleware`), `src/dev/user.clj`, `.clj-kondo/config.edn` plus upstream imports, `.cljfmt.edn`, `resources/public/index.html`, `resources/dev.html`, and `.gitignore`. Also runs `npm install` and `npx shadow-cljs compile main` as a first-build sanity check. No `--report` flag; preview the side effects by reading this `SKILL.md`.
+
 ## Prerequisites
 
 Verify these are installed before proceeding. If any are missing, stop and tell the user.
@@ -404,8 +417,8 @@ Next steps:
     user=> (start)                              # Start the Jetty server
   open http://localhost:8000                    # Dev HTTP server
 
-Run /fulcro-check to run the full quality pipeline.
-Run /clj-check for the host-neutral checks.
+Run /fulcro-tidy to run the full quality pipeline.
+Run /clj-tidy for the host-neutral checks.
 ```
 
 ## Gotchas

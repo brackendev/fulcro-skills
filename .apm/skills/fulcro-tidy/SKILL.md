@@ -1,30 +1,41 @@
 ---
-name: fulcro-check
-description: Run the Fulcro quality pipeline (lint, format, test, advanced, dry)
-argument-hint: "[lint|format|test|advanced|dry]"
+name: fulcro-tidy
+description: Tidy a Fulcro project (lint, format, test, advanced, dry); writes formatting by default
+argument-hint: "[lint|format|test|advanced|dry] [--report] [all]"
 allowed-tools: Bash, Read, Grep, Glob
 user-invocable: true
 disable-model-invocation: true
 ---
 
-# Fulcro Quality Check
+# Fulcro Tidy
 
-Run lint, format, test, advanced-compilation, and duplicate-form checks on a Fulcro project. Fulcro projects are full-stack (Clojure server + ClojureScript client), so the `test` step aggregates server and client suites and the `advanced` step runs a shadow-cljs release build to surface production-only failures.
+Run lint, format, test, advanced-compilation, and duplicate-form checks on a Fulcro project. Fulcro projects are full-stack (Clojure server + ClojureScript client), so the `test` step aggregates server and client suites and the `advanced` step runs a shadow-cljs release build to surface production-only failures. The format step writes by default; the other four steps are pure-read of source.
+
+See `CONVENTIONS.md` in the repo root for the argument grammar this skill follows.
+
+## Arguments
+
+| Input             | Target                                                                       |
+|-------------------|------------------------------------------------------------------------------|
+| (no argument)     | Run all five steps (`lint`, `format`, `test`, `advanced`, `dry`) on the project (`src`, `test`) |
+| `all`             | Same as (no argument); accepted for family consistency                       |
+| `lint`            | Run lint only                                                                |
+| `format`          | Run format only                                                              |
+| `test`            | Run server (Kaocha) and client (shadow-cljs / Karma) test suites             |
+| `advanced`        | Run a shadow-cljs release build as a production-build sanity check           |
+| `dry`             | Run the dry4clj duplicate-form scan only                                     |
+| `<path>` `<glob>` | Restrict lint, format, and dry steps to those files or directories. The `test` and `advanced` steps ignore paths and always run the configured suites and builds |
+| `--report`        | Replace `cljfmt fix` with non-writing `cljfmt check` in the format step      |
+
+Step keywords are combinable (for example, `/fulcro-tidy lint test`). The `--report` flag may appear in any position. When `--report` is present without an explicit step keyword, every step still runs; only the format step's behavior changes.
+
+## Mutation
+
+Only the `format` step writes source. It runs `clj -M:cljfmt fix` by default, rewriting files in place. With `--report`, the step runs `clj -M:cljfmt check`, which exits non-zero when files would change but does not write. The `lint`, `test`, and `dry` steps are pure-read of source regardless of `--report`. The `advanced` step writes shadow-cljs release output under `resources/public/js/` (build artifact, not source) and is unaffected by `--report`.
 
 ## Steps
 
-Parse `$ARGUMENTS` to determine which steps to run. If empty, run all steps in order.
-
-| Argument | Steps |
-|----------|-------|
-| (empty) | lint, format, test, advanced, dry |
-| `lint` | lint only |
-| `format` | format only |
-| `test` | test only |
-| `advanced` | advanced only |
-| `dry` | dry only |
-
-Multiple arguments can be combined (e.g., `lint test dry`).
+Parse `$ARGUMENTS` to determine which steps to run and whether `--report` is present. If no step keyword is supplied (or only `all` is supplied), run every step in order.
 
 ### 1. Lint
 
@@ -48,13 +59,19 @@ Without the upstream Fulcro exports, the linter floods on `defsc`, `defmutation`
 
 ### 2. Format
 
-Run `cljfmt` to fix formatting. `cljfmt` covers `.clj`, `.cljs`, and `.cljc`:
+Without `--report`, run cljfmt to fix formatting. `cljfmt` covers `.clj`, `.cljs`, and `.cljc`:
 
 ```bash
 clj -M:cljfmt fix
 ```
 
-Report pass if exit code is 0, fail otherwise. Show any formatting changes.
+With `--report`, run cljfmt in check mode (no writes):
+
+```bash
+clj -M:cljfmt check
+```
+
+Report pass if exit code is 0, fail otherwise. Show any formatting changes (under `fix`) or the diff (under `check`).
 
 The project's `.cljfmt.edn` should include indentation entries for Fulcro macros (`defsc`, `defmutation`, `defrouter`, `defresolver`). The `/fulcro-new` skill writes them; older projects may need to be updated.
 
@@ -121,7 +138,7 @@ Upstream dry4clj scans `.clj`, `.cljc`, and `.cljs` files by default; the Clojur
 After running all requested steps, print a summary:
 
 ```
-Fulcro Check Results:
+Fulcro Tidy Results:
   Lint:     PASS/FAIL/SKIPPED
   Format:   PASS/FAIL/SKIPPED
   Test:     PASS/FAIL/SKIPPED  (server: PASS, client: PASS)
@@ -129,7 +146,7 @@ Fulcro Check Results:
   Dry:      PASS/FAIL/SKIPPED
 ```
 
-If any step fails, stop and report the failure. Do not continue to subsequent steps.
+If `--report` was passed, append `(report mode: format checked, not written)` after the summary. If any step fails, stop and report the failure. Do not continue to subsequent steps.
 
 ## Gotchas
 
@@ -140,3 +157,4 @@ If any step fails, stop and report the failure. Do not continue to subsequent st
 - **The dry step skips `.cljd` files.** Fulcro projects do not use ClojureDart, so this is irrelevant here, but the same `:dry4clj` alias copied from a ClojureDart project will not pick up `.cljd` either without the brackendev/dry4clj `add-cljd-extension` branch.
 - **Server tests via Kaocha and client tests via shadow-cljs run in different JVMs.** A failing test in one suite does not abort the other. The aggregate report distinguishes server (PASS) from client (PASS) so partial failures are clear.
 - **Pathom resolvers can fail at test time without failing at compile time.** Invalid `::pco/output` declarations (for example, declaring an attribute the resolver does not actually return) only surface during query execution. The test suite is the place to catch this.
+- **`dry` is a duplicate-form scan, not a dry-run mode.** The step keyword names the dry4clj tool. To preview the format step without writing, pass `--report`, not `dry`.

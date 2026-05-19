@@ -1,7 +1,7 @@
 interface:
   display_name: "Upgrade Fulcro"
   short_description: "Upgrade the Fulcro dependency in deps.edn to the latest released version."
-  default_prompt: "Upgrade Fulcro to the latest version."
+  default_prompt: "Run /fulcro-upgrade on this project."
   brand_color: "#009E9E"
 
 policy:

@@ -45,14 +45,16 @@ Update later with `apm update [-g]`. Remove with `apm uninstall brackendev/fulcr
 
 - [Clojure CLI](https://clojure.org/guides/install_clojure) and Java 17 or higher for any skill in this package.
 - [Node and npm](https://nodejs.org/) for the ClojureScript build via [shadow-cljs](https://github.com/thheller/shadow-cljs) (recommended).
-- [clojure-skills](https://github.com/brackendev/clojure-skills) installed alongside, for the host-neutral baseline plus `/clojure-skills:clj-check` and `/clojure-skills:clj-smells-review`.
+- [clojure-skills](https://github.com/brackendev/clojure-skills) installed alongside, for the host-neutral baseline plus `/clj-tidy` and `/clj-smells-review`.
 - [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) installed alongside, for the ClojureScript-specific guidance the `fulcro` skill defers to (JavaScript interop, externs, macro stage separation, JS numerics, `cljs.main` / `shadow-cljs` workflow).
 - [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) installed alongside, for the JVM-specific guidance the Fulcro server defers to (Java interop, JVM exceptions, refs / agents / STM, the Clojure CLI / `tools.build` / `clj-kondo` / `cljfmt` / `test-runner` / nREPL workflow).
 - [clj-kondo](https://github.com/clj-kondo/clj-kondo) for the lint steps in the user-invoked skills below.
-- The `fulcro-check` dry step requires a [dry4clj](https://github.com/unclebob/dry4clj) `:dry4clj` alias in `deps.edn`.
+- The `fulcro-tidy` dry step requires a [dry4clj](https://github.com/unclebob/dry4clj) `:dry4clj` alias in `deps.edn`.
 - [Fulcro Inspect](https://chrome.google.com/webstore/detail/fulcro-inspect) Chrome extension for development. The `/fulcro-skills:fulcro-new` scaffolding registers the preloads; the DevTools tab only appears when the extension is installed.
 
 ## Skills
+
+User-invocable skills in this package share an argument grammar, scope vocabulary, and mutation-as-default rule. See [CONVENTIONS.md](CONVENTIONS.md) for the full standard.
 
 ### Scaffolding and quality
 
@@ -64,27 +66,29 @@ Scaffold a new Fulcro full-stack project with a ClojureScript client (shadow-clj
 /fulcro-new my-app
 ```
 
-#### `/fulcro-check [lint|format|test|advanced|dry]`
+#### `/fulcro-tidy [lint|format|test|advanced|dry] [--report] [all]`
 
-Run the Fulcro quality pipeline. Defaults to the full sequence (lint, format, test, advanced, dry). Each step is also addressable on its own. The `test` step aggregates server (Kaocha) and client (shadow-cljs / Karma) suites; the `advanced` step runs a shadow-cljs release build as a production-build sanity check.
+Tidy a Fulcro project. Runs lint, format, test, advanced-compilation, and duplicate-form checks. Defaults to the full sequence and writes formatting in place via `cljfmt fix`. Each step is also addressable on its own. The `test` step aggregates server (Kaocha) and client (shadow-cljs / Karma) suites; the `advanced` step runs a shadow-cljs release build as a production-build sanity check. Pass `--report` to swap the format step for non-writing `cljfmt check`; lint, test, advanced, and dry are pure-read of source regardless.
 
 ```bash
-/fulcro-check
-/fulcro-check lint
-/fulcro-check advanced
+/fulcro-tidy
+/fulcro-tidy lint
+/fulcro-tidy advanced
+/fulcro-tidy --report
 ```
 
-#### `/fulcro-upgrade`
+#### `/fulcro-upgrade [--report] [all]`
 
-Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest released version on Clojars. Optionally bumps `com.fulcrologic/fulcro-rad` and `com.fulcrologic/guardrails` alongside. Refreshes dependencies, runs compile + tests, and refreshes clj-kondo imports. Surfaces the upstream `CHANGELOG.adoc` for major version jumps and asks for confirmation before applying them. Reverts the version on compile or test failure.
+Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest released version on Clojars. Optionally bumps `com.fulcrologic/fulcro-rad` and `com.fulcrologic/guardrails` alongside. Refreshes dependencies, runs compile + tests, and refreshes clj-kondo imports. Surfaces the upstream `CHANGELOG.adoc` for major version jumps and asks for confirmation before applying them. Reverts the version on compile or test failure. Pass `--report` to print the current and latest versions without writing or running anything.
 
 ```bash
 /fulcro-upgrade
+/fulcro-upgrade --report
 ```
 
-#### `/fulcro-smells-review [scope or options...]` (placeholder)
+#### `/fulcro-smells-review [path|all]` (placeholder)
 
-Reserves the command name for a future Fulcro-specific smells review. Currently prints a "not yet implemented" notice that points users at `/clj-smells-review` in `clojure-skills` for host-neutral smells in `.clj`, `.cljc`, and `.cljs` files. See [TODO.md](TODO.md).
+Reserves the command name for a future Fulcro-specific smells review. Pure-report: it never writes. Currently prints a "not yet implemented" notice that points users at `/clj-smells-review` in `clojure-skills` for host-neutral smells in `.clj`, `.cljc`, and `.cljs` files. See [TODO.md](TODO.md).
 
 ### Auto-triggered
 

@@ -1,7 +1,7 @@
 ---
 name: fulcro-smells-review
-description: Review Fulcro code against Fulcro-specific smells (placeholder, see TODO)
-argument-hint: "[scope or options...]"
+description: Review Fulcro code against Fulcro-specific smells (placeholder, see TODO); pure report, never writes
+argument-hint: "[path|all]"
 allowed-tools: Bash, Read, Grep, Glob
 user-invocable: true
 disable-model-invocation: true
@@ -10,6 +10,29 @@ disable-model-invocation: true
 # Fulcro Smells Review (Placeholder)
 
 This skill is a placeholder. Fulcro-specific code review against a curated smells catalog is planned but not yet implemented. Running `/fulcro-smells-review` today shows this notice and exits.
+
+See `CONVENTIONS.md` in the repo root for the argument grammar this skill will follow once implemented.
+
+## Arguments
+
+| Input              | Target                                                                       |
+|--------------------|------------------------------------------------------------------------------|
+| (no argument)      | Review changed files only (staged + unstaged)                                |
+| `all`              | Review the full codebase, sampling high-risk and high-traffic namespaces     |
+| `<path>` `<glob>`  | Review files or directories matching the path                                |
+
+Examples once implemented:
+
+```
+/fulcro-smells-review
+/fulcro-smells-review src/main/app
+/fulcro-smells-review src/main/app/ui/root.cljs
+/fulcro-smells-review all
+```
+
+This skill is pure-report: it never writes. Operators apply suggestions themselves. No `--report` flag, because there is nothing to invert.
+
+When no argument is supplied and the working tree is not a git worktree, the eventual implementation will ask the operator what to review rather than silently widening to `all`.
 
 ## Status
 
@@ -47,7 +70,7 @@ fulcro-smells-review is not yet implemented.
 
 A Fulcro-specific smells catalog is in development. For now:
   - Run /clj-smells-review for host-neutral smells in .clj, .cljc, and .cljs files.
-  - Run /fulcro-check for lint, format, test, advanced-compilation, and duplicate-form checks.
+  - Run /fulcro-tidy for lint, format, test, advanced-compilation, and duplicate-form checks.
   - The fulcro skill (auto-invoked) covers idiomatic Fulcro components, idents, queries, mutations, loads, routing, forms, UI state machines, and the Pathom 3 server.
 
 To track progress, see TODO.md in the fulcro-skills repo.
