@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-05-20
+
+### Changed
+
+- `CONTRIBUTING.md` is aligned to the family-wide structural template. A `CONVENTIONS.md` row is added to the Layout table, step 1 of "Adding or modifying a skill" no longer carries an inline `CONVENTIONS.md` reminder (the dedicated Skill conventions section now opens with that pointer), and the Skill conventions section begins with the canonical pointer paragraph.
+
 ## [0.1.3] - 2026-05-20
 
 ### Changed
