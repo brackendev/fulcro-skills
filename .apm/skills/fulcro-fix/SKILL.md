@@ -1,13 +1,13 @@
 ---
-name: fulcro-tidy
-description: Tidy a Fulcro project (lint, format, test, advanced, dry); writes formatting by default
+name: fulcro-fix
+description: Fix a Fulcro project (lint, format, test, advanced, dry); writes formatting by default
 argument-hint: "[lint|format|test|advanced|dry] [--report] [all]"
 allowed-tools: Bash, Read, Grep, Glob
 user-invocable: true
 disable-model-invocation: true
 ---
 
-# Fulcro Tidy
+# Fulcro Fix
 
 Run lint, format, test, advanced-compilation, and duplicate-form checks on a Fulcro project. Fulcro projects are full-stack (Clojure server + ClojureScript client), so the `test` step aggregates server and client suites and the `advanced` step runs a shadow-cljs release build to surface production-only failures. The format step writes by default; the other four steps are pure-read of source.
 
@@ -27,7 +27,7 @@ See `CONVENTIONS.md` in the repo root for the argument grammar this skill follow
 | `<path>` `<glob>` | Restrict lint, format, and dry steps to those files or directories. The `test` and `advanced` steps ignore paths and always run the configured suites and builds |
 | `--report`        | Replace `cljfmt fix` with non-writing `cljfmt check` in the format step      |
 
-Step keywords are combinable (for example, `/fulcro-tidy lint test`). The `--report` flag may appear in any position. When `--report` is present without an explicit step keyword, every step still runs; only the format step's behavior changes.
+Step keywords are combinable (for example, `/fulcro-fix lint test`). The `--report` flag may appear in any position. When `--report` is present without an explicit step keyword, every step still runs; only the format step's behavior changes.
 
 ## Mutation
 
@@ -138,7 +138,7 @@ Upstream dry4clj scans `.clj`, `.cljc`, and `.cljs` files by default; the Clojur
 After running all requested steps, print a summary:
 
 ```
-Fulcro Tidy Results:
+Fulcro Fix Results:
   Lint:     PASS/FAIL/SKIPPED
   Format:   PASS/FAIL/SKIPPED
   Test:     PASS/FAIL/SKIPPED  (server: PASS, client: PASS)

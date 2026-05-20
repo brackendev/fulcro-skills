@@ -70,7 +70,7 @@ fulcro-smells-review is not yet implemented.
 
 A Fulcro-specific smells catalog is in development. For now:
   - Run /clj-smells-review for host-neutral smells in .clj, .cljc, and .cljs files.
-  - Run /fulcro-tidy for lint, format, test, advanced-compilation, and duplicate-form checks.
+  - Run /fulcro-fix for lint, format, test, advanced-compilation, and duplicate-form checks.
   - The fulcro skill (auto-invoked) covers idiomatic Fulcro components, idents, queries, mutations, loads, routing, forms, UI state machines, and the Pathom 3 server.
 
 To track progress, see TODO.md in the fulcro-skills repo.

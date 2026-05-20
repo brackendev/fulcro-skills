@@ -12,7 +12,7 @@ User-invocable skills accept natural-language keywords and bare paths. The singl
 
 Skill-specific modifiers are bare phrases, not flags. Examples used in this plugin:
 
-- `lint`, `format`, `test`, `advanced`, `dry`: step keywords for `/fulcro-tidy`
+- `lint`, `format`, `test`, `advanced`, `dry`: step keywords for `/fulcro-fix`
 - `all`, `<path>`, `<glob>`: shared scope keywords listed in rule 2
 
 Each skill documents its own modifiers in its `## Arguments` table.
@@ -41,7 +41,7 @@ Skills that can mutate the workspace apply changes when invoked. The operator pa
 
 Only the literal token `--report` enables report-only mode. Natural-language phrases ("preview", "dry run", "rehearse") are scope input or step keywords, not mode triggers. A skill that conflates them is wrong.
 
-Command verbs reinforce the default. Skills named `/fulcro-tidy`, `/fulcro-new`, `/fulcro-upgrade` (verbs that imply action) mutate by default. Skills named `/fulcro-smells-review` (`review` is a reading verb) are pure-report.
+Command suffixes reinforce the default. The family follows a noun-first `<target>-<verb>` pattern, so the trailing verb signals behavior. Skills with suffix `-fix`, `-new`, `-upgrade` (verbs that imply action) mutate by default; in this package, `/fulcro-fix`, `/fulcro-new`, and `/fulcro-upgrade`. Skills with suffix `-review` (a reading verb) are pure-report; in this package, `/fulcro-smells-review`.
 
 ## Classification
 
@@ -57,7 +57,7 @@ A skill is classified by its actual behavior, not by its name. If the name and b
 
 | Skill                   | Class           | `--report` available? | Notes |
 |-------------------------|-----------------|------------------------|-------|
-| `/fulcro-tidy`          | Mutating        | Yes                    | `format` step runs `cljfmt fix` by default. `--report` swaps it for `cljfmt check`. `lint`, `test`, `advanced`, and `dry` are pure-read of source regardless. The `advanced` step writes the shadow-cljs release output under `resources/public/js/` (build artifact, not source). |
+| `/fulcro-fix`          | Mutating        | Yes                    | `format` step runs `cljfmt fix` by default. `--report` swaps it for `cljfmt check`. `lint`, `test`, `advanced`, and `dry` are pure-read of source regardless. The `advanced` step writes the shadow-cljs release output under `resources/public/js/` (build artifact, not source). |
 | `/fulcro-new`           | Mutating        | No                     | Scaffolds the project tree. Preview the side effects by reading `SKILL.md`. |
 | `/fulcro-upgrade`       | Mutating        | Yes                    | Rewrites `:mvn/version` for the Fulcro artifacts in `deps.edn`. `--report` prints the current and remote versions without writing. |
 | `/fulcro-smells-review` | Pure report     | No flag (no inverse)   | Placeholder until the Fulcro smells catalog ships. The eventual review never writes source files. |
@@ -76,16 +76,16 @@ The section name `## Customization` is retired.
 
 ## Worked examples
 
-### `/fulcro-tidy` -- mutating skill with `--report`
+### `/fulcro-fix` -- mutating skill with `--report`
 
 ```
-/fulcro-tidy                       # all five steps; format writes
-/fulcro-tidy lint                  # lint only (pure-read; no source writes)
-/fulcro-tidy format                # format step; writes via cljfmt fix
-/fulcro-tidy lint test             # combined step keywords
-/fulcro-tidy --report              # all five steps; format reads via cljfmt check
-/fulcro-tidy format --report       # format step; no source writes
-/fulcro-tidy all                   # synonym for (no argument)
+/fulcro-fix                       # all five steps; format writes
+/fulcro-fix lint                  # lint only (pure-read; no source writes)
+/fulcro-fix format                # format step; writes via cljfmt fix
+/fulcro-fix lint test             # combined step keywords
+/fulcro-fix --report              # all five steps; format reads via cljfmt check
+/fulcro-fix format --report       # format step; no source writes
+/fulcro-fix all                   # synonym for (no argument)
 ```
 
 The skill writes source when the `format` step runs without `--report`. With `--report`, the format step runs `cljfmt check`, which reports diffs without writing. The other four steps (`lint`, `test`, `advanced`, `dry`) are pure-read of source regardless. The `advanced` step writes build output under `resources/public/js/` (shadow-cljs release); that is a build artifact, not a source mutation, and is unaffected by `--report`. The `## Mutation` section in the skill body documents this asymmetry.
@@ -126,13 +126,13 @@ No `--report` flag, because the skill never writes. Operators apply suggestions 
 
 ## Ambiguity notes
 
-**`(no argument)` outside a git worktree.** A skill whose narrowest useful default depends on git state (for example, "review changed files") must define the fallback when no git worktree is present. The expected fallback is to ask the operator what to review rather than to widen silently to `all`. In this plugin, `/fulcro-smells-review` will document this fallback when its body lands; `/fulcro-tidy` and `/fulcro-upgrade` derive scope from `deps.edn` and the project tree rather than from a diff, so the question does not apply.
+**`(no argument)` outside a git worktree.** A skill whose narrowest useful default depends on git state (for example, "review changed files") must define the fallback when no git worktree is present. The expected fallback is to ask the operator what to review rather than to widen silently to `all`. In this plugin, `/fulcro-smells-review` will document this fallback when its body lands; `/fulcro-fix` and `/fulcro-upgrade` derive scope from `deps.edn` and the project tree rather than from a diff, so the question does not apply.
 
 **`commit` versus staged-and-unstaged state.** When a future skill accepts `commit` as a scope keyword, it must state whether `commit` means the most recent commit, the staged tree, or the staged-plus-unstaged working tree. The expected default is the most recent commit. None of the current skills carry this scope.
 
-**`--report` versus natural-language synonyms.** "Preview", "dry run", "rehearse", and similar phrases are scope input or step keywords (or operator chatter), never mode triggers. Only the literal `--report` token disables writes. The `/fulcro-tidy` step keyword `dry` is the dry4clj duplicate-form scan, not a dry-run mode; the conflict is named here so operators do not read `dry` as "dry run".
+**`--report` versus natural-language synonyms.** "Preview", "dry run", "rehearse", and similar phrases are scope input or step keywords (or operator chatter), never mode triggers. Only the literal `--report` token disables writes. The `/fulcro-fix` step keyword `dry` is the dry4clj duplicate-form scan, not a dry-run mode; the conflict is named here so operators do not read `dry` as "dry run".
 
-**Step keywords versus scope keywords.** A skill like `/fulcro-tidy` accepts step keywords (`lint`, `format`, `test`, `advanced`, `dry`) that select work to run, and scope keywords (`all`) that widen scope. Step keywords are skill-specific and listed in the skill's own table. Scope keywords are shared and listed here. When a skill has both, the `## Arguments` table lists both with clearly distinct rows.
+**Step keywords versus scope keywords.** A skill like `/fulcro-fix` accepts step keywords (`lint`, `format`, `test`, `advanced`, `dry`) that select work to run, and scope keywords (`all`) that widen scope. Step keywords are skill-specific and listed in the skill's own table. Scope keywords are shared and listed here. When a skill has both, the `## Arguments` table lists both with clearly distinct rows.
 
 **Tool-level flags the skill calls internally.** A skill may invoke a tool that itself uses POSIX flags (for example, `clj-kondo --lint`, `cljfmt fix`, `cljfmt check`, `shadow-cljs release`, `karma start --single-run`, `clj -P`, `curl -sSL`). Those are tool-level flags, not skill flags, and do not count against rule 1. The skill body should disambiguate when a tool flag could be mistaken for a skill flag.
 
@@ -142,9 +142,9 @@ When adding or modifying a user-invocable skill, confirm each item before commit
 
 - [ ] Skill has a `## Arguments` section (or is listed under [Exemptions](#exemptions)).
 - [ ] Scope rows match the canonical table; opt-in rows appear only where the skill genuinely supports them.
-- [ ] If the skill mutates, the command verb signals it (`/fulcro-tidy`, `/fulcro-new`, `/fulcro-upgrade`).
+- [ ] If the skill mutates, the command suffix signals it (`-fix`, `-new`, `-upgrade`, `-deploy`, `-test`, `-sync`, `-prune`, `-rebuild`, `-create`, `-apply`).
 - [ ] If the skill mutates and preview is useful, `--report` is documented.
-- [ ] If the skill is pure-report, the verb signals it (`/fulcro-smells-review`) and the skill has no `--report` flag.
+- [ ] If the skill is pure-report, the suffix signals it (`-review`, `-audit`, `-check`) and the skill has no `--report` flag.
 - [ ] No `## Customization` section.
 - [ ] No `--name` flags other than `--report`. Tool-level flags the skill calls internally (for example, `cljfmt check`, `clj-kondo --lint`, `shadow-cljs release`) are not skill flags and do not count.
 - [ ] Frontmatter `name` matches the skill's directory name.

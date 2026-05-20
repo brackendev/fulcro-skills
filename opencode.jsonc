@@ -3,11 +3,11 @@
   "permission": {
     "skill": {
       "fulcro": "allow",
+      "fulcro-fix": "allow",
       "fulcro-lenses": "allow",
       "fulcro-new": "allow",
-      "fulcro-tidy": "allow",
-      "fulcro-upgrade": "allow",
-      "fulcro-smells-review": "allow"
+      "fulcro-smells-review": "allow",
+      "fulcro-upgrade": "allow"
     }
   }
 }

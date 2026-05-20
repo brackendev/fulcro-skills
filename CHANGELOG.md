@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-05-20
+
+### Changed
+
+- The `fulcro-tidy` skill is renamed to `fulcro-fix` to adopt the noun-first canonical naming pattern (`<target>-<verb>`) shared across the agent-skills family. The verb suffix `-fix` consistently signals a mutating quality pipeline (lint, format, test, advanced, dry). Operators with a saved `/fulcro-tidy` invocation should replace it with `/fulcro-fix`. The skill's behavior is unchanged; only the name moves.
+- Cross-references to `clojure-skills` are updated for the `clj-tidy` → `clj-fix` rename. The `/fulcro-new` "Next steps" footer now points at `/clj-fix` and `/fulcro-fix`; the `/fulcro-upgrade` recommended-next-steps and sanity-check comments now point at `/fulcro-fix advanced`.
+
 ## 0.1.2
 
 ### Added

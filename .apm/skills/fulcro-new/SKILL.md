@@ -417,8 +417,8 @@ Next steps:
     user=> (start)                              # Start the Jetty server
   open http://localhost:8000                    # Dev HTTP server
 
-Run /fulcro-tidy to run the full quality pipeline.
-Run /clj-tidy for the host-neutral checks.
+Run /fulcro-fix to run the full quality pipeline.
+Run /clj-fix for the host-neutral checks.
 ```
 
 ## Gotchas

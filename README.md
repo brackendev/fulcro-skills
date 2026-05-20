@@ -45,11 +45,11 @@ Update later with `apm update [-g]`. Remove with `apm uninstall brackendev/fulcr
 
 - [Clojure CLI](https://clojure.org/guides/install_clojure) and Java 17 or higher for any skill in this package.
 - [Node and npm](https://nodejs.org/) for the ClojureScript build via [shadow-cljs](https://github.com/thheller/shadow-cljs) (recommended).
-- [clojure-skills](https://github.com/brackendev/clojure-skills) installed alongside, for the host-neutral baseline plus `/clj-tidy` and `/clj-smells-review`.
+- [clojure-skills](https://github.com/brackendev/clojure-skills) installed alongside, for the host-neutral baseline plus `/clj-fix` and `/clj-smells-review`.
 - [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) installed alongside, for the ClojureScript-specific guidance the `fulcro` skill defers to (JavaScript interop, externs, macro stage separation, JS numerics, `cljs.main` / `shadow-cljs` workflow).
 - [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) installed alongside, for the JVM-specific guidance the Fulcro server defers to (Java interop, JVM exceptions, refs / agents / STM, the Clojure CLI / `tools.build` / `clj-kondo` / `cljfmt` / `test-runner` / nREPL workflow).
 - [clj-kondo](https://github.com/clj-kondo/clj-kondo) for the lint steps in the user-invoked skills below.
-- The `fulcro-tidy` dry step requires a [dry4clj](https://github.com/unclebob/dry4clj) `:dry4clj` alias in `deps.edn`.
+- The `fulcro-fix` dry step requires a [dry4clj](https://github.com/unclebob/dry4clj) `:dry4clj` alias in `deps.edn`.
 - [Fulcro Inspect](https://chrome.google.com/webstore/detail/fulcro-inspect) Chrome extension for development. The `/fulcro-skills:fulcro-new` scaffolding registers the preloads; the DevTools tab only appears when the extension is installed.
 
 ## Skills
@@ -66,15 +66,15 @@ Scaffold a new Fulcro full-stack project with a ClojureScript client (shadow-clj
 /fulcro-new my-app
 ```
 
-#### `/fulcro-tidy [lint|format|test|advanced|dry] [--report] [all]`
+#### `/fulcro-fix [lint|format|test|advanced|dry] [--report] [all]`
 
-Tidy a Fulcro project. Runs lint, format, test, advanced-compilation, and duplicate-form checks. Defaults to the full sequence and writes formatting in place via `cljfmt fix`. Each step is also addressable on its own. The `test` step aggregates server (Kaocha) and client (shadow-cljs / Karma) suites; the `advanced` step runs a shadow-cljs release build as a production-build sanity check. Pass `--report` to swap the format step for non-writing `cljfmt check`; lint, test, advanced, and dry are pure-read of source regardless.
+Fix a Fulcro project. Runs lint, format, test, advanced-compilation, and duplicate-form checks. Defaults to the full sequence and writes formatting in place via `cljfmt fix`. Each step is also addressable on its own. The `test` step aggregates server (Kaocha) and client (shadow-cljs / Karma) suites; the `advanced` step runs a shadow-cljs release build as a production-build sanity check. Pass `--report` to swap the format step for non-writing `cljfmt check`; lint, test, advanced, and dry are pure-read of source regardless.
 
 ```bash
-/fulcro-tidy
-/fulcro-tidy lint
-/fulcro-tidy advanced
-/fulcro-tidy --report
+/fulcro-fix
+/fulcro-fix lint
+/fulcro-fix advanced
+/fulcro-fix --report
 ```
 
 #### `/fulcro-upgrade [--report] [all]`
