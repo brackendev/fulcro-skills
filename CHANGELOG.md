@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.5] - 2026-05-22
+
+### Changed
+
+- The `fulcro-smells-review` placeholder is renamed to `fulcro-smells-fix` to match the mutating contract adopted by the new `clj-smells-fix` skill in [clojure-skills](https://github.com/brackendev/clojure-skills). The placeholder still prints a "not yet implemented" notice; the rename, argument grammar (`[path|all] [--report]`), and frontmatter all reflect the eventual fix-by-default behavior. The "not yet implemented" notice now points operators at `/clj-smells-fix` for host-neutral smells. Operators with a saved `/fulcro-smells-review` invocation should replace it with `/fulcro-smells-fix`.
+
 ## [0.1.4] - 2026-05-20
 
 ### Changed

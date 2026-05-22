@@ -41,7 +41,7 @@ Skills that can mutate the workspace apply changes when invoked. The operator pa
 
 Only the literal token `--report` enables report-only mode. Natural-language phrases ("preview", "dry run", "rehearse") are scope input or step keywords, not mode triggers. A skill that conflates them is wrong.
 
-Command suffixes reinforce the default. The family follows a noun-first `<target>-<verb>` pattern, so the trailing verb signals behavior. Skills with suffix `-fix`, `-new`, `-upgrade` (verbs that imply action) mutate by default; in this package, `/fulcro-fix`, `/fulcro-new`, and `/fulcro-upgrade`. Skills with suffix `-review` (a reading verb) are pure-report; in this package, `/fulcro-smells-review`.
+Command suffixes reinforce the default. The family follows a noun-first `<target>-<verb>` pattern, so the trailing verb signals behavior. Skills with suffix `-fix`, `-new`, `-upgrade` (verbs that imply action) mutate by default; in this package, `/fulcro-fix`, `/fulcro-new`, `/fulcro-upgrade`, and the forthcoming `/fulcro-smells-fix`. Skills with suffix `-review` (a reading verb) are pure-report; this package currently has none.
 
 ## Classification
 
@@ -60,7 +60,7 @@ A skill is classified by its actual behavior, not by its name. If the name and b
 | `/fulcro-fix`          | Mutating        | Yes                    | `format` step runs `cljfmt fix` by default. `--report` swaps it for `cljfmt check`. `lint`, `test`, `advanced`, and `dry` are pure-read of source regardless. The `advanced` step writes the shadow-cljs release output under `resources/public/js/` (build artifact, not source). |
 | `/fulcro-new`           | Mutating        | No                     | Scaffolds the project tree. Preview the side effects by reading `SKILL.md`. |
 | `/fulcro-upgrade`       | Mutating        | Yes                    | Rewrites `:mvn/version` for the Fulcro artifacts in `deps.edn`. `--report` prints the current and remote versions without writing. |
-| `/fulcro-smells-review` | Pure report     | No flag (no inverse)   | Placeholder until the Fulcro smells catalog ships. The eventual review never writes source files. |
+| `/fulcro-smells-fix`    | Mutating        | Yes                    | Placeholder until the Fulcro smells catalog ships. When implemented, mirrors the mutation contract of `/clj-smells-fix`: Stage 1 mechanical and Stage 2 DEFECT-band findings auto-applied; `--report` disables all writes. |
 
 Model-invocable skills (`fulcro`, `fulcro-lenses`) have no argument surface and are not classified here.
 
@@ -109,16 +109,17 @@ The skill writes source when the `format` step runs without `--report`. With `--
 
 The default rewrites `:mvn/version` for `com.fulcrologic/fulcro` (and optionally `fulcro-rad`, `guardrails`) in `deps.edn`, then runs `clj -P`, the compile, and the test suites. With `--report`, the skill prints the current and latest versions for each artifact found in `deps.edn` and surfaces the upstream `CHANGELOG.adoc` for major version jumps. No writes. No compile. No tests.
 
-### `/fulcro-smells-review` -- pure-report skill
+### `/fulcro-smells-fix` -- mutating skill with `--report` (placeholder)
 
 ```
-/fulcro-smells-review                            # review changed files
-/fulcro-smells-review src/main/app               # review files under directory
-/fulcro-smells-review src/main/app/ui/root.cljs  # review specific file
-/fulcro-smells-review all                        # review the full codebase
+/fulcro-smells-fix                               # fix changed files
+/fulcro-smells-fix src/main/app                  # fix files under directory
+/fulcro-smells-fix src/main/app/ui/root.cljs     # fix specific file
+/fulcro-smells-fix all                           # fix the full codebase
+/fulcro-smells-fix --report                      # produce the report only; no writes
 ```
 
-No `--report` flag, because the skill never writes. Operators apply suggestions themselves. The body remains a placeholder until the Fulcro smells catalog ships; the argument grammar and pure-report classification land now so the eventual implementation has a contract to honor.
+The body remains a placeholder until the Fulcro smells catalog ships. When implemented, the skill will mirror the mutation contract of `/clj-smells-fix`: Stage 1 mechanical findings and Stage 2 `DEFECT`-tier findings within a defined safety band are auto-applied; `SMELL` and `HINT` findings remain report-only; `--report` disables all writes.
 
 ## Exemptions
 
@@ -126,7 +127,7 @@ No `--report` flag, because the skill never writes. Operators apply suggestions 
 
 ## Ambiguity notes
 
-**`(no argument)` outside a git worktree.** A skill whose narrowest useful default depends on git state (for example, "review changed files") must define the fallback when no git worktree is present. The expected fallback is to ask the operator what to review rather than to widen silently to `all`. In this plugin, `/fulcro-smells-review` will document this fallback when its body lands; `/fulcro-fix` and `/fulcro-upgrade` derive scope from `deps.edn` and the project tree rather than from a diff, so the question does not apply.
+**`(no argument)` outside a git worktree.** A skill whose narrowest useful default depends on git state (for example, "review changed files") must define the fallback when no git worktree is present. The expected fallback is to ask the operator what to review rather than to widen silently to `all`. In this plugin, `/fulcro-smells-fix` will document this fallback when its body lands; `/fulcro-fix` and `/fulcro-upgrade` derive scope from `deps.edn` and the project tree rather than from a diff, so the question does not apply.
 
 **`commit` versus staged-and-unstaged state.** When a future skill accepts `commit` as a scope keyword, it must state whether `commit` means the most recent commit, the staged tree, or the staged-plus-unstaged working tree. The expected default is the most recent commit. None of the current skills carry this scope.
 

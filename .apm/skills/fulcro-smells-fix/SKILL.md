@@ -1,15 +1,15 @@
 ---
-name: fulcro-smells-review
-description: Review Fulcro code against Fulcro-specific smells (placeholder, see TODO); pure report, never writes
-argument-hint: "[path|all]"
-allowed-tools: Bash, Read, Grep, Glob
+name: fulcro-smells-fix
+description: Fix Fulcro code against Fulcro-specific smells; placeholder, see TODO. When implemented, auto-applies mechanical and DEFECT-tier findings and reports the rest. Pass --report to disable writes.
+argument-hint: "[path|all] [--report]"
+allowed-tools: Bash, Read, Edit, Grep, Glob
 user-invocable: true
 disable-model-invocation: true
 ---
 
-# Fulcro Smells Review (Placeholder)
+# Fulcro Smells Fix (Placeholder)
 
-This skill is a placeholder. Fulcro-specific code review against a curated smells catalog is planned but not yet implemented. Running `/fulcro-smells-review` today shows this notice and exits.
+This skill is a placeholder. Fulcro-specific code review against a curated smells catalog is planned but not yet implemented. Running `/fulcro-smells-fix` today shows this notice and exits.
 
 See `CONVENTIONS.md` in the repo root for the argument grammar this skill will follow once implemented.
 
@@ -17,28 +17,30 @@ See `CONVENTIONS.md` in the repo root for the argument grammar this skill will f
 
 | Input              | Target                                                                       |
 |--------------------|------------------------------------------------------------------------------|
-| (no argument)      | Review changed files only (staged + unstaged)                                |
-| `all`              | Review the full codebase, sampling high-risk and high-traffic namespaces     |
-| `<path>` `<glob>`  | Review files or directories matching the path                                |
+| (no argument)      | Fix changed files only (staged + unstaged)                                   |
+| `all`              | Fix the full codebase, sampling high-risk and high-traffic namespaces        |
+| `<path>` `<glob>`  | Fix files or directories matching the path                                   |
+| `--report`         | Disable all writes; produce the report only                                  |
 
 Examples once implemented:
 
 ```
-/fulcro-smells-review
-/fulcro-smells-review src/main/app
-/fulcro-smells-review src/main/app/ui/root.cljs
-/fulcro-smells-review all
+/fulcro-smells-fix
+/fulcro-smells-fix src/main/app
+/fulcro-smells-fix src/main/app/ui/root.cljs
+/fulcro-smells-fix all
+/fulcro-smells-fix --report
 ```
 
-This skill is pure-report: it never writes. Operators apply suggestions themselves. No `--report` flag, because there is nothing to invert.
+When implemented, the skill mirrors the mutation contract of `/clj-smells-fix`: Stage 1 mechanical findings and Stage 2 `DEFECT`-tier findings within a defined safety band are auto-applied; `SMELL` and `HINT` findings remain report-only; `--report` disables all writes.
 
-When no argument is supplied and the working tree is not a git worktree, the eventual implementation will ask the operator what to review rather than silently widening to `all`.
+When no argument is supplied and the working tree is not a git worktree, the eventual implementation will ask the operator what to fix rather than silently widening to `all`.
 
 ## Status
 
-**Not implemented.** A Fulcro-specific smells catalog is pending. The host-neutral [clj-smells catalog](https://github.com/nufuturo-ufcg/clj-smells-catalog) covered by `/clj-smells-review` already catches cross-dialect smells in the `.clj`, `.cljc`, and `.cljs` files of a Fulcro project, but it does not flag the framework-specific failure modes that come from ident hygiene, query / state-shape drift, mutation section confusion, transit serialization hazards, and unnecessary re-renders.
+**Not implemented.** A Fulcro-specific smells catalog is pending. The host-neutral [clj-smells catalog](https://github.com/nufuturo-ufcg/clj-smells-catalog) covered by `/clj-smells-fix` already catches cross-dialect smells in the `.clj`, `.cljc`, and `.cljs` files of a Fulcro project, but it does not flag the framework-specific failure modes that come from ident hygiene, query / state-shape drift, mutation section confusion, transit serialization hazards, and unnecessary re-renders.
 
-For host-neutral smells, run `/clj-smells-review`. For ClojureScript-specific smells, watch for the future `/cljs-smells-review`. This skill will complement both with Fulcro-specific checks once the catalog is curated.
+For host-neutral smells, run `/clj-smells-fix`. For ClojureScript-specific smells, watch for the future `/cljs-smells-fix`. This skill will complement both with Fulcro-specific checks once the catalog is curated.
 
 ## Planned Categories
 
@@ -66,14 +68,14 @@ See `TODO.md` in the repo root.
 When invoked, print this notice and exit:
 
 ```
-fulcro-smells-review is not yet implemented.
+fulcro-smells-fix is not yet implemented.
 
 A Fulcro-specific smells catalog is in development. For now:
-  - Run /clj-smells-review for host-neutral smells in .clj, .cljc, and .cljs files.
+  - Run /clj-smells-fix for host-neutral smells in .clj, .cljc, and .cljs files.
   - Run /fulcro-fix for lint, format, test, advanced-compilation, and duplicate-form checks.
   - The fulcro skill (auto-invoked) covers idiomatic Fulcro components, idents, queries, mutations, loads, routing, forms, UI state machines, and the Pathom 3 server.
 
 To track progress, see TODO.md in the fulcro-skills repo.
 ```
 
-Do not run any analysis. Do not invoke clj-kondo. Do not consult the host-neutral clj-smells catalog.
+Do not run any analysis. Do not invoke clj-kondo. Do not consult the host-neutral clj-smells catalog. Do not write to any source file.

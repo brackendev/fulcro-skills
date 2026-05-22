@@ -45,7 +45,7 @@ Update later with `apm update [-g]`. Remove with `apm uninstall brackendev/fulcr
 
 - [Clojure CLI](https://clojure.org/guides/install_clojure) and Java 17 or higher for any skill in this package.
 - [Node and npm](https://nodejs.org/) for the ClojureScript build via [shadow-cljs](https://github.com/thheller/shadow-cljs) (recommended).
-- [clojure-skills](https://github.com/brackendev/clojure-skills) installed alongside, for the host-neutral baseline plus `/clj-fix` and `/clj-smells-review`.
+- [clojure-skills](https://github.com/brackendev/clojure-skills) installed alongside, for the host-neutral baseline plus `/clj-fix` and `/clj-smells-fix`.
 - [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) installed alongside, for the ClojureScript-specific guidance the `fulcro` skill defers to (JavaScript interop, externs, macro stage separation, JS numerics, `cljs.main` / `shadow-cljs` workflow).
 - [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) installed alongside, for the JVM-specific guidance the Fulcro server defers to (Java interop, JVM exceptions, refs / agents / STM, the Clojure CLI / `tools.build` / `clj-kondo` / `cljfmt` / `test-runner` / nREPL workflow).
 - [clj-kondo](https://github.com/clj-kondo/clj-kondo) for the lint steps in the user-invoked skills below.
@@ -86,9 +86,9 @@ Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest rele
 /fulcro-upgrade --report
 ```
 
-#### `/fulcro-smells-review [path|all]` (placeholder)
+#### `/fulcro-smells-fix [path|all] [--report]` (placeholder)
 
-Reserves the command name for a future Fulcro-specific smells review. Pure-report: it never writes. Currently prints a "not yet implemented" notice that points users at `/clj-smells-review` in `clojure-skills` for host-neutral smells in `.clj`, `.cljc`, and `.cljs` files. See [TODO.md](TODO.md).
+Reserves the command name for a future Fulcro-specific smells fix pipeline. When implemented, will mirror the mutation contract of `/clj-smells-fix` in `clojure-skills`: auto-apply Stage 1 mechanical findings and the Stage 2 `DEFECT`-tier safety band; report `SMELL` and `HINT` findings; honor `--report` to disable all writes. Currently prints a "not yet implemented" notice that points users at `/clj-smells-fix` in `clojure-skills` for host-neutral smells in `.clj`, `.cljc`, and `.cljs` files. See [TODO.md](TODO.md).
 
 ### Auto-triggered
 
