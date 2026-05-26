@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.1.6] - 2026-05-26
+
+### Fixed
+
+- Quote the YAML `description` and `argument-hint` frontmatter in all skills that had unquoted values. Prevents potential YAML misinterpretation of special characters (angle brackets in `argument-hint`, semicolons and parentheses in `description`).
+
 ## [0.1.5] - 2026-05-22
 
 ### Changed

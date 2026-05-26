@@ -1,6 +1,6 @@
 ---
 name: fulcro-fix
-description: Fix a Fulcro project (lint, format, test, advanced, dry); writes formatting by default
+description: "Fix a Fulcro project (lint, format, test, advanced, dry); writes formatting by default"
 argument-hint: "[lint|format|test|advanced|dry] [--report] [all]"
 allowed-tools: Bash, Read, Grep, Glob
 user-invocable: true

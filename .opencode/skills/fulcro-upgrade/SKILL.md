@@ -1,6 +1,6 @@
 ---
 name: fulcro-upgrade
-description: Upgrade the Fulcro dependency in deps.edn to the latest released version and verify the project compiles and tests pass
+description: "Upgrade the Fulcro dependency in deps.edn to the latest released version and verify the project compiles and tests pass"
 argument-hint: "[--report] [all]"
 user-invocable: true
 disable-model-invocation: true

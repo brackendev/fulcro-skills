@@ -1,7 +1,7 @@
 ---
 name: fulcro-new
-description: Scaffold a new Fulcro full-stack project with shadow-cljs and Pathom 3
-argument-hint: <project-name>
+description: "Scaffold a new Fulcro full-stack project with shadow-cljs and Pathom 3"
+argument-hint: "<project-name>"
 user-invocable: true
 disable-model-invocation: true
 ---

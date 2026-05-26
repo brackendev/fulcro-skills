@@ -1,6 +1,6 @@
 ---
 name: fulcro-smells-fix
-description: Fix Fulcro code against Fulcro-specific smells; placeholder, see TODO. When implemented, auto-applies mechanical and DEFECT-tier findings and reports the rest. Pass --report to disable writes.
+description: "Fix Fulcro code against Fulcro-specific smells; placeholder, see TODO. When implemented, auto-applies mechanical and DEFECT-tier findings and reports the rest. Pass --report to disable writes."
 argument-hint: "[path|all] [--report]"
 allowed-tools: Bash, Read, Edit, Grep, Glob
 user-invocable: true
