@@ -36,6 +36,8 @@ When implemented, the skill mirrors the mutation contract of `/clj-smells-fix`: 
 
 When no argument is supplied and the working tree is not a git worktree, the eventual implementation will ask the operator what to fix rather than silently widening to `all`.
 
+The eventual implementation will honor Rule 4 in CONVENTIONS.md: vendored, generated, and dependency-locked paths are excluded from broad scopes (`.gitignore` matches plus a hardcoded floor of `node_modules/`, `vendor/`, `third_party/`, `.bundle/`, `target/`, `build/`, `dist/`, `out/`, `.shadow-cljs/`, `cljd-out/`, and the standard lock files). Naming a vendored path directly through `<path>` or `<glob>` bypasses the filter for that target.
+
 ## Status
 
 **Not implemented.** A Fulcro-specific smells catalog is pending. The host-neutral [clj-smells catalog](https://github.com/nufuturo-ufcg/clj-smells-catalog) covered by `/clj-smells-fix` already catches cross-dialect smells in the `.clj`, `.cljc`, and `.cljs` files of a Fulcro project, but it does not flag the framework-specific failure modes that come from ident hygiene, query / state-shape drift, mutation section confusion, transit serialization hazards, and unnecessary re-renders.
