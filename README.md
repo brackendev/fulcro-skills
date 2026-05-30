@@ -52,6 +52,17 @@ Update later with `apm update [-g]`. Remove with `apm uninstall brackendev/fulcr
 - The `fulcro-fix` dry step requires a [dry4clj](https://github.com/unclebob/dry4clj) `:dry4clj` alias in `deps.edn`.
 - [Fulcro Inspect](https://chrome.google.com/webstore/detail/fulcro-inspect) Chrome extension for development. The `/fulcro-skills:fulcro-new` scaffolding registers the preloads; the DevTools tab only appears when the extension is installed.
 
+## Command guide
+
+A quick guide to every slash command. The detailed entries under [Skills](#skills) cover arguments and examples.
+
+| Command | Use it when | What it does |
+|---------|-------------------|--------------|
+| `/fulcro-new` | Starting a new Fulcro full-stack project | Scaffolds the ClojureScript client and Clojure JVM server with lint, format, and a development REPL |
+| `/fulcro-fix` | Lint, format, tests, or the advanced build need attention | Runs the fix pipeline across client and server, rewriting files in the format step with `cljfmt fix` |
+| `/fulcro-upgrade` | The Fulcro version is behind | Upgrades `com.fulcrologic/fulcro` to the latest release and verifies compile and tests |
+| `/fulcro-smells-fix` | Reserved for a future Fulcro smells fix | Placeholder that prints a not-yet-implemented notice pointing to `/clj-smells-fix` |
+
 ## Skills
 
 User-invocable skills in this package share an argument grammar, scope vocabulary, and mutation-as-default rule. See [CONVENTIONS.md](CONVENTIONS.md) for the full standard.
@@ -79,7 +90,7 @@ Fix a Fulcro project. Runs lint, format, test, advanced-compilation, and duplica
 
 #### `/fulcro-upgrade [--report] [all]`
 
-Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest released version on Clojars. Optionally bumps `com.fulcrologic/fulcro-rad` and `com.fulcrologic/guardrails` alongside. Refreshes dependencies, runs compile + tests, and refreshes clj-kondo imports. Surfaces the upstream `CHANGELOG.adoc` for major version jumps and asks for confirmation before applying them. Reverts the version on compile or test failure. Pass `--report` to print the current and latest versions without writing or running anything.
+Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest released version on Clojars. Optionally updates `com.fulcrologic/fulcro-rad` and `com.fulcrologic/guardrails` alongside. Refreshes dependencies, runs compile + tests, and refreshes clj-kondo imports. Surfaces the upstream `CHANGELOG.adoc` for major version jumps and asks for confirmation before applying them. Reverts the version on compile or test failure. Pass `--report` to print the current and latest versions without writing or running anything.
 
 ```bash
 /fulcro-upgrade
