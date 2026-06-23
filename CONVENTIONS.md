@@ -37,7 +37,9 @@ Opt-in rows (`#N` or PR URL, `pr`, `commit`) appear only when the skill genuinel
 
 ### Rule 3: mutation is the default
 
-Skills that can mutate the workspace apply changes when invoked. The operator passes `--report` to receive a description of what the skill would do, without modifying any files.
+Skills that can mutate the workspace apply safe, deterministic source and project-configuration edits when invoked, and they report findings that require judgment or lack a safe rewrite. The operator passes `--report` to suppress those intentional edits and instead receive a description of what the skill would change.
+
+Report-only mode suppresses intentional source and project-configuration edits. It does not suppress the incidental output of verification steps. Compilation, release builds, and linter bootstrap may still write caches and build artifacts under `--report`. Each skill discloses any such write in its `## Mutation` section.
 
 Only the literal token `--report` enables report-only mode. Natural-language phrases ("preview", "dry run", "rehearse") are scope input or step keywords, not mode triggers. A skill that conflates them is wrong.
 

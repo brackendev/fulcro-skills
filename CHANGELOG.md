@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+## [0.1.9] - 2026-06-23
+
+### Changed
+
+- The `fulcro-fix` dry step is now advisory and scoped to production source, matching `clj-fix`. It scans the source paths declared by the project's build configuration (`deps.edn` `:paths` or `shadow-cljs.edn` `:source-paths`) rather than a hardcoded `src test`, reads dry4clj's `--edn` output instead of matching a status string, and reports candidates without failing the run or halting the pipeline. The step reports `PASS` when no candidates are found, `REVIEW` when it lists candidates for inspection, `ERROR` when the scan cannot run or parse, or `SKIPPED`. Test directories are excluded by default because repeated test scaffolding is usually intentional.
+- `CONVENTIONS.md` Rule 3 now states that mutating skills apply safe edits and report findings that require judgment, and that `--report` suppresses intentional source and configuration edits while verification steps such as the advanced release build may still write build artifacts.
+
 ## [0.1.8] - 2026-06-15
 
 ### Changed
