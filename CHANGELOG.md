@@ -1,6 +1,16 @@
 # Changelog
 
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
 ## [Unreleased]
+
+## [0.1.10] - 2026-07-29
+
+### Removed
+
+- The package manifest no longer declares the top-level `target: all` field. The APM manifest schema deprecates the `all` value: a parser treats the field as though it were absent and falls through to the `--target` flag or filesystem auto-detection, and the value is scheduled to become a hard parse error in a future APM release. Removing the field makes that fall-through behavior permanent. Installation behavior is unchanged, because APM already resolved targets by auto-detection rather than from this field. The separate `compilation.target` setting is not affected.
 
 ## [0.1.9] - 2026-06-23
 
@@ -47,7 +57,7 @@
 - The `fulcro-tidy` skill is renamed to `fulcro-fix` to adopt the noun-first canonical naming pattern (`<target>-<verb>`) shared across the agent-skills family. The verb suffix `-fix` consistently signals a mutating quality pipeline (lint, format, test, advanced, dry). Operators with a saved `/fulcro-tidy` invocation should replace it with `/fulcro-fix`. The skill's behavior is unchanged; only the name moves.
 - Cross-references to `clojure-skills` are updated for the `clj-tidy` → `clj-fix` rename. The `/fulcro-new` "Next steps" footer now points at `/clj-fix` and `/fulcro-fix`; the `/fulcro-upgrade` recommended-next-steps and sanity-check comments now point at `/fulcro-fix advanced`.
 
-## 0.1.2
+## [0.1.2] - 2026-05-19
 
 ### Added
 
@@ -60,13 +70,13 @@
 - The `fulcro-upgrade` skill gains a `## Arguments` section, a `## Mutation` section, and a `--report` flag. With `--report`, the skill prints the current and latest released versions for each Fulcro artifact found in `deps.edn` and surfaces the upstream `CHANGELOG.adoc` for major version jumps without writing `deps.edn`, refreshing dependencies, or running the compile and tests. The skill's recommended-next-steps and sanity-check comments now point at `/fulcro-tidy` rather than the renamed-away `/fulcro-check`.
 - The `fulcro-smells-review` placeholder gains a canonical `## Arguments` section using the core scope vocabulary (`(no argument)`, `all`, `<path>`) and an explicit pure-report classification ahead of the eventual implementation. The "not yet implemented" notice now points at `/fulcro-tidy` instead of `/fulcro-check`.
 
-## 0.1.1
+## [0.1.1] - 2026-05-18
 
 ### Fixed
 
 - Remove Claude Code-specific `<package>:` namespace prefix from slash commands referenced inside skill bodies. The neutral form (`/fulcro-check`, `/fulcro-new`, `/fulcro-smells-review`, `/clj-check`, `/clj-smells-review`, `/cljs-smells-review`) resolves correctly on every runtime APM deploys to, matching the form already used in `README.md`.
 
-## 0.1.0
+## [0.1.0] - 2026-05-17
 
 ### Added
 
