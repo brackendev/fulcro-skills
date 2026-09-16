@@ -1,6 +1,6 @@
 # fulcro-skills
 
-[Fulcro](https://github.com/fulcrologic/fulcro) full-stack framework skills packaged as an [APM](https://github.com/microsoft/apm) plugin. One install deploys the full set to every runtime in APM's default target set: Claude Code, Codex, OpenCode, Cursor, Copilot, Gemini, Windsurf, and Kiro. Antigravity is supported by naming it explicitly with `--target antigravity`.
+[Fulcro](https://github.com/fulcrologic/fulcro) full-stack framework skills packaged as an [APM](https://github.com/microsoft/apm) plugin. One install deploys the full set to every runtime in APM's default target set: Claude Code, Codex, OpenCode, Cursor, Copilot, Gemini, Windsurf, Kiro, and Grok Build. Antigravity is supported by naming it explicitly with `--target antigravity`.
 
 Skills follow the [Agent Skills](https://agentskills.io) open standard. Two auto-trigger from conversation context (`fulcro`, `fulcro-lenses`); the rest appear as slash commands.
 
