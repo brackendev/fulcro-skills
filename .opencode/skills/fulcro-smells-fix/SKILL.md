@@ -11,7 +11,7 @@ disable-model-invocation: true
 
 This skill is a placeholder. Fulcro-specific code review against a curated smells catalog is planned but not yet implemented. Running `/fulcro-smells-fix` today shows this notice and exits.
 
-See `CONVENTIONS.md` in the repo root for the argument grammar this skill will follow once implemented.
+The argument grammar this skill will follow is defined in `CONVENTIONS.md` in the fulcro-skills source repository.
 
 ## Arguments
 
@@ -61,10 +61,6 @@ When implemented, this review will cover Fulcro-specific failure modes:
 - **Pathom 2 holdovers**: imports from `com.wsscode.pathom.connect` in projects whose other resolvers are on `com.wsscode.pathom3.connect.operation`; mixed Pathom 2 / Pathom 3 syntax in the same parser.
 - **`with-redefs` on Fulcro internals**: tests that rebind framework hooks after `(app/fulcro-app ...)` has already read them, producing the appearance of a stub without the behavior.
 
-## Tracking
-
-See `TODO.md` in the repo root.
-
 ## Output
 
 When invoked, print this notice and exit:
@@ -76,8 +72,6 @@ A Fulcro-specific smells catalog is in development. For now:
   - Run /clj-smells-fix for host-neutral smells in .clj, .cljc, and .cljs files.
   - Run /fulcro-fix for lint, format, test, advanced-compilation, and duplicate-form checks.
   - The fulcro skill (auto-invoked) covers idiomatic Fulcro components, idents, queries, mutations, loads, routing, forms, UI state machines, and the Pathom 3 server.
-
-To track progress, see TODO.md in the fulcro-skills repo.
 ```
 
-Do not run any analysis. Do not invoke clj-kondo. Do not consult the host-neutral clj-smells catalog. Do not write to any source file.
+Print the notice and stop. Until the Fulcro catalog exists, this skill performs no analysis and writes nothing.

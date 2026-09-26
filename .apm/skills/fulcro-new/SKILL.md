@@ -17,7 +17,7 @@ Create a new [Fulcro](https://github.com/fulcrologic/fulcro) full-stack project 
 | `<project-name>`  | Required. Use hyphens (for example, `my-app`); the skill maps to underscores for file paths (`my_app/`) and keeps hyphens in namespace symbols. |
 | (no argument)     | Prompt the operator for a project name.                                      |
 
-This skill is exempt from the `all` and `<path>` rows of the standard scope vocabulary because scaffolding has no useful default scope. See `CONVENTIONS.md` in the repo root for the standard.
+This skill is exempt from the `all` and `<path>` rows of the standard scope vocabulary because scaffolding has no useful default scope, as documented in `CONVENTIONS.md` in the fulcro-skills source repository.
 
 ## Mutation
 
@@ -54,7 +54,7 @@ curl -sSL -A 'Mozilla/5.0' \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['latest_release'])"
 ```
 
-Do the same for `com.fulcrologic/guardrails` and `com.wsscode/pathom3`. If a fetch fails, fall back to the most recent versions known to work together (Fulcro 3.8.x with Pathom 3 alpha builds at the time of writing) and warn the user that the values may be stale.
+Do the same for `com.fulcrologic/guardrails` and `com.wsscode/pathom3`. If a fetch fails, ask the user for the versions to use. Do not invent a version number.
 
 ### 3. Create Project Directory and Source Roots
 
@@ -86,8 +86,8 @@ cd <project-name>
                          org.clojure/tools.namespace {:mvn/version "1.5.0"}}}
 
   :test   {:extra-paths ["src/test"]
-           :extra-deps  {lambdaisland/kaocha       {:mvn/version "1.91.1392"}
-                         com.fulcrologic/fulcro-spec {:mvn/version "3.1.31"}}
+           :extra-deps  {lambdaisland/kaocha     {:mvn/version "1.91.1392"}
+                         fulcrologic/fulcro-spec {:mvn/version "3.2.10"}}
            :main-opts   ["-m" "kaocha.runner"]}
 
   :cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.13.0"}}

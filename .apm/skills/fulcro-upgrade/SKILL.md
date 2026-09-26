@@ -10,7 +10,7 @@ disable-model-invocation: true
 
 Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest released version on Clojars and verify the project still compiles and passes tests. Optionally bump `com.fulcrologic/fulcro-rad` and `com.fulcrologic/guardrails` in the same pass.
 
-See `CONVENTIONS.md` in the repo root for the argument grammar this skill follows.
+The argument grammar follows `CONVENTIONS.md` in the fulcro-skills source repository. The table below is complete for this skill.
 
 ## Arguments
 

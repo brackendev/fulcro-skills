@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.13] - 2026-09-26
+
+### Fixed
+
+- `fulcro-new` now scaffolds the `:test` alias with `fulcrologic/fulcro-spec` 3.2.10. The previous coordinate, `com.fulcrologic/fulcro-spec` 3.1.31, does not exist on Clojars, so `clj -M:test` failed in every generated project. The `fulcro` skill's project-workflows reference used the same nonexistent version and now also names 3.2.10.
+- `fulcro-new` now asks for dependency versions when the Clojars lookup fails, matching `fulcro-upgrade`, instead of falling back to a stale Fulcro 3.8.x hint.
+- `fulcro-fix` now reports how many vendored or generated paths it skipped, and lists them under `--report`, as Rule 4 requires.
+- Skills no longer point at `CONVENTIONS.md` "in the repo root", which is absent from the projects where the skills run, or at `TODO.md`, which is not published. The `fulcro-smells-fix` notice no longer links to `TODO.md`.
+
 ## [0.1.12] - 2026-09-16
 
 ### Changed

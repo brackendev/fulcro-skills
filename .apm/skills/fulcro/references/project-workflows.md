@@ -77,7 +77,7 @@ A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the
 
   :test  {:extra-paths ["src/test"]
           :extra-deps  {lambdaisland/kaocha   {:mvn/version "1.91.1392"}
-                        fulcrologic/fulcro-spec {:mvn/version "3.1.31"}}
+                        fulcrologic/fulcro-spec {:mvn/version "3.2.10"}}
           :main-opts   ["-m" "kaocha.runner"]}
 
   :cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.13.0"}}
