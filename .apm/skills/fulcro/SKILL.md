@@ -12,8 +12,10 @@ description: >-
   ::ComponentName]`; shadow-cljs.edn with a :main build that requires Fulcro;
   deps.edn containing com.fulcrologic/fulcro, com.fulcrologic/fulcro-rad,
   com.fulcrologic/guardrails, or com.wsscode/pathom3; transit endpoints `/api`;
-  Fulcro Inspect preloads (com.fulcrologic.fulcro.inspect.preload,
-  com.fulcrologic.fulcro.inspect.dom-picker-preload); or any mention of Fulcro,
+  Fulcro Inspect setup (com.fulcrologic/fulcro-inspect,
+  com.fulcrologic.devtools.chrome-preload, fulcro.inspect.tool/add-fulcro-inspect!,
+  com.fulcrologic.fulcro.inspect.dom-picker-preload, or the legacy
+  com.fulcrologic.fulcro.inspect.preload); or any mention of Fulcro,
   fulcrologic, Fulcro Inspect, or Fulcro RAD. Covers defsc component
   definition, idents and the normalized client database, EQL queries,
   mutations and their action / remote / ok-action / error-action sections,
@@ -32,7 +34,9 @@ Layered on top of three baselines:
 
 This skill applies when the code uses Fulcro on the client (`com.fulcrologic.fulcro.*`) or Pathom on the server (`com.wsscode.pathom3.*`). It owns the framework-specific deltas: component definition, query / ident / initial-state composition, the normalized client database, mutations, loading, dynamic routing, forms, UI state machines, the Pathom 3 resolver shape, the Fulcro Inspect workflow, and the typical project shape (`shadow-cljs.edn` + `deps.edn` + `dev/user.clj`).
 
-For the deepest framework reference, [The Fulcro Developer's Guide](https://book.fulcrologic.com/) is the canonical source. Cross-check API specifics against the [Fulcro source](https://github.com/fulcrologic/fulcro) and the upstream `CHANGELOG.adoc`; the framework evolves quickly enough that older blog posts often describe deprecated forms.
+For the deepest framework reference, [The Fulcro Developer's Guide](https://book.fulcrologic.com/) is the canonical source. Cross-check API specifics against the [Fulcro source](https://github.com/fulcrologic/fulcro) and its commit history between release tags (`fulcro-3.9.0`, `fulcro-3.10.0`, and so on). The upstream `CHANGELOG.md` stops at 3.7.2. The framework evolves quickly enough that older blog posts often describe deprecated forms.
+
+This skill reflects Fulcro 3.10, which requires React 18 or later and is tested against React 19.
 
 ## Key Rules
 
@@ -60,7 +64,7 @@ For the deepest framework reference, [The Fulcro Developer's Guide](https://book
 
 (defsc Person [this {:person/keys [id name email]}]
   {:query         [:person/id :person/name :person/email]
-   :ident         (fn [] [:person/id (:person/id props)])
+   :ident         (fn [] [:person/id id])
    :initial-state (fn [{:keys [id name email]}]
                     {:person/id    id
                      :person/name  name
@@ -72,13 +76,17 @@ For the deepest framework reference, [The Fulcro Developer's Guide](https://book
 
 Equivalent template forms are accepted for `:ident` (`:ident :person/id`), `:initial-state` (a literal map with `:param/keyword` placeholders), and `:query`. Use the lambda form whenever the value depends on the props or a child query.
 
+The `:ident` lambda takes no arguments. It sees `this` and the names bound by the argument list, so `id` above comes from the `{:person/keys [id ...]}` destructuring. The `:query` lambda sees only `this`. Writing `props` inside the lambda only works when the argument list binds `props`, for example `[this {:person/keys [id] :as props}]`. The `:initial-state` lambda sees only its own `params` argument.
+
+A docstring goes between the component name and the argument list: `(defsc Person "A person row." [this props] {...} ...)`. Fulcro 3.10 and later refuse to compile a docstring placed after the argument list.
+
 | Option | Purpose |
 |--------|---------|
 | `:query` | EQL the component requires |
 | `:ident` | Two-tuple table identity, or `(fn [] ...)` for a custom shape |
 | `:initial-state` | Seed data, composable across the parent tree |
 | `:pre-merge` | Transform a server response before normalization |
-| `:use-hooks?` | Render via React hooks instead of the class form |
+| `:use-hooks?` | `true` renders a function component that can use React hooks. `:pure` also memoizes it with React `memo`. Switching to or from `:pure` requires a browser reload. |
 | `:componentDidMount` / `:componentWillUnmount` | Lifecycle hooks on the class form |
 | `:initLocalState` | Component-local mutable state (rare; prefer the normalized DB) |
 
@@ -91,7 +99,7 @@ The factory wraps a component for rendering. Build it once per namespace:
 (map ui-person (sort-by :person/name people))
 ```
 
-`:keyfn` returns React's `key` for each rendered instance. Without it, lists trigger more re-renders than necessary and React logs a warning.
+`:keyfn` returns React's `key` for each rendered instance. Since Fulcro 3.9, a factory for a component that has an `:ident` defaults the key to the ident's second element as a string, so `{:keyfn :person/id}` above is redundant but harmless. Precedence runs from a `:react-key` entry in the props, to an explicit `:keyfn`, to the ident default. Components without an ident still need `:keyfn` when rendered in a list, or React logs a missing-key warning and re-renders more than necessary.
 
 ## Idents and Normalization
 
@@ -359,18 +367,39 @@ Wire the parser into a transit endpoint (`/api`) using Ring middleware. Fulcro's
 
 ## Fulcro Inspect
 
-The Chrome extension is the single highest-leverage debugging tool. Install it from the Chrome Web Store, then add the preloads to the development build:
+Fulcro Inspect is the single highest-leverage debugging tool. Since Fulcro 3.8, Inspect is a library the application adds as a development dependency and installs explicitly. The setup has four parts, following the [fulcro-inspect README](https://github.com/fulcrologic/fulcro-inspect):
 
-```clojure
-;; shadow-cljs.edn (the :dev build)
-{:builds
- {:main
-  {:devtools
-   {:preloads [com.fulcrologic.fulcro.inspect.preload
-               com.fulcrologic.fulcro.inspect.dom-picker-preload]}}}}
-```
+1. Install the Chrome extension (`fulcro-inspect-chrome-<version>.zip`) or the Electron app (4.x) from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases). Open a new tab or restart Chrome after installing the extension.
+2. Add `com.fulcrologic/fulcro-inspect` to the development alias in `deps.edn` (it brings in `com.fulcrologic/fulcro-devtools-remote`). Point shadow-cljs at that alias with `:deps {:aliases [:dev]}`.
+3. Add the preload for the chosen front end:
 
-The DOM picker preload is optional but recommended; it lets the Inspect tab highlight a rendered component and jump to its props and ident.
+   ```clojure
+   ;; shadow-cljs.edn
+   {:deps   {:aliases [:dev]}
+    :builds
+    {:main
+     {:devtools
+      {:preloads [com.fulcrologic.devtools.chrome-preload        ; or com.fulcrologic.devtools.electron-preload
+                  com.fulcrologic.fulcro.inspect.dom-picker-preload]}}}}
+   ```
+
+4. Register the app with Inspect during client startup:
+
+   ```clojure
+   (ns app.client
+     (:require
+      [com.fulcrologic.devtools.common.target :refer [ido]]
+      [fulcro.inspect.tool :as it]
+      [app.application :refer [SPA]]))
+
+   (defn ^:export init []
+     (ido (it/add-fulcro-inspect! SPA))
+     ...)
+   ```
+
+`ido` behaves like `do` in development and removes its body from release builds, so Closure dead-code elimination strips Inspect from production output. The DOM picker preload is optional but recommended. It lets the Inspect tab highlight a rendered component and jump to its props and ident.
+
+The pre-3.8 preload `com.fulcrologic.fulcro.inspect.preload` still exists, but it only logs "Inspect NOT installed" to the console. A project that still lists it, or that relies on the old Chrome Web Store extension, has no working Inspect.
 
 What Inspect provides:
 
@@ -379,7 +408,23 @@ What Inspect provides:
 - **Network tab** — every HTTP remote request and response in transit form.
 - **EQL tab** — run an EQL query against the current state or a connected Pathom parser, with autocomplete.
 
-Keep Chrome DevTools open during development so Binaryage devtools (also loaded as a preload via `binaryage/devtools`) can render Clojure data with proper formatting in the console. Closing and reopening DevTools forces a re-cache that occasionally drops the formatter.
+Keep Chrome DevTools open during development so Binaryage devtools (`binaryage/devtools` in the `:dev` alias) can format Clojure data in the console. Closing and reopening DevTools forces a re-cache that occasionally drops the formatter.
+
+### REPL flight recorder
+
+Fulcro 3.9 added `com.fulcrologic.fulcro.inspect.repl-tool`, which records transactions, network activity, state changes, and state machine transitions into a log that can be queried from the REPL. It suits REPL-driven and agent-driven debugging where the Inspect UI is not available:
+
+```clojure
+(require '[com.fulcrologic.fulcro.inspect.repl-tool :as rt])
+
+(rt/install! SPA)
+(rt/clear!)
+;; trigger the behavior under investigation
+(rt/digest)   ; structured summary of what happened
+(rt/tx-log)   ; transactions only
+```
+
+`rt/network-log` and `rt/uism-log` narrow the log further. The log lives in the app's runtime atom and has a bounded size.
 
 ## Project Workflow
 
@@ -431,6 +476,14 @@ Fulcro 2.x used `defui` (component) and union-table routers (`defrouter` in the 
 ### Fulcro 3 hooks components are real React function components
 
 Setting `:use-hooks? true` produces a function component. Standard React hook rules apply (no hooks in conditionals, no hooks in loops). The trade-off is fewer Fulcro lifecycle hooks; reach for hooks components when you genuinely want React hooks behavior, not as a default.
+
+### Fulcro 3.9 removed the pre-React-18 renderers
+
+Fulcro 3.9 requires React 18 or later and removed rendering code that could not work with React's asynchronous rendering. The removed pieces are the `com.fulcrologic.fulcro.rendering.multiple-roots-renderer`, `ident-optimized-render`, and `keyframe-render2` namespaces, and the `hooks/use-fulcro-mount` function. An app that sets `:optimized-render!` to one of those renderers, or mounts components with `use-fulcro-mount`, fails to compile after the upgrade. Remove the `:optimized-render!` override so the default keyframe renderer applies, and replace floating roots with `hooks/use-component` or `hooks/use-root`. The `react.version18` helpers (`with-react18`, `react18-options`) are now deprecated no-ops and can be deleted.
+
+### A `defsc` docstring after the argument list swallows the options map
+
+In `(defsc Person [this props] "A person." {:query [...]} ...)`, the string and the options map are body forms, so the component compiles with no query, ident, or initial state and fails at runtime in confusing ways. Fulcro 3.10 rejects this shape at compile time with "Docstring is in the wrong position". On earlier versions, check for it whenever a component's props are unexpectedly empty.
 
 ### `with-redefs` is unreliable across the wire
 

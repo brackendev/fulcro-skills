@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.14] - 2026-10-04
+
+### Fixed
+
+- The Fulcro Inspect setup in the `fulcro` skill, its project-workflows reference, and the `fulcro-new` scaffold now works with Fulcro 3.8 and later. The previous `com.fulcrologic.fulcro.inspect.preload` preload only logs "Inspect NOT installed" on current Fulcro. Projects now add the `com.fulcrologic/fulcro-inspect` development dependency, use the `com.fulcrologic.devtools.chrome-preload` (or `electron-preload`) preload, and call `(ido (it/add-fulcro-inspect! app))` at startup. The extension or Electron app comes from the fulcro-inspect releases page instead of the Chrome Web Store.
+- `fulcro-new` now writes `:deps {:aliases [:dev]}` in `shadow-cljs.edn`. With the previous `:deps true`, shadow-cljs could not see shadow-cljs itself or the other libraries declared in the `:dev` alias.
+- `fulcro-new` and the project-workflows reference now declare the `:dry4clj` alias with a Git coordinate. The previous `dry4clj/dry4clj` 0.1.1 coordinate does not exist on Clojars, so the alias could not resolve.
+- `fulcro-upgrade` no longer fetches the nonexistent upstream `CHANGELOG.adoc`. It reads the commit history between Fulcro release tags instead, because the replacement `CHANGELOG.md` stops at 3.7.2.
+- The `fulcro` skill's main `defsc` example no longer refers to an unbound `props` inside its `:ident` lambda.
+- `fulcro-new` now writes a `.cljfmt.edn` that keeps cljfmt's default indentation rules. The previous file listed Fulcro macros under `:indents`, which current cljfmt treats as a replacement for every default rule, so `cljfmt check` reported most generated files as incorrectly formatted and `/fulcro-fix` rewrote them. The new file uses `:extra-indents`, includes the `defmutation` sections, and uses the two-space `:cursive` argument style found in Fulcro's own source.
+- `fulcro-new` now writes `tests.edn` and a sample Pathom resolver test. Previously Kaocha searched a nonexistent `test/` directory and `clj -M:test` passed without running any tests. The first-build check now runs `clj -M:test` too.
+- `fulcro-new` no longer sets `:source-paths` in `shadow-cljs.edn`, which shadow-cljs ignores when `:deps` is set and reported with a warning on every build. Its clj-kondo configuration now accepts fulcro-spec's `=>` assertion arrows, and the root component no longer triggers an unused-binding warning.
+- `fulcro-fix` no longer claims that dry4clj always exits 0. A failed scan now reports `ERROR`, and a new gotcha explains that dry4clj cannot read auto-resolved keywords such as `::pco/output`, so the advisory dry step reports `ERROR` on most Pathom code. Another new gotcha warns against running `cljfmt fix` over an `:indents`-only configuration.
+- The project-workflows reference no longer cites a nonexistent `fulcro/checksum-state` helper for integration tests, and its `deps.edn` example now includes the `muuntaja` dependency its middleware example requires.
+
+### Changed
+
+- The skills now target Fulcro 3.10.0 and React 19. `fulcro-new` pins React 19.3.0, shadow-cljs 3.5.4, and refreshed versions of the other fixed dependencies, and fetches the latest `fulcro-inspect` alongside Fulcro, guardrails, and Pathom 3.
+- `fulcro-new` now requires Java 21 or higher, as shadow-cljs 3.x does.
+- `fulcro-upgrade` now also upgrades `com.fulcrologic/fulcro-inspect`, and it shows the release history and asks for confirmation on minor version jumps as well as major ones, since Fulcro 3.9 shipped breaking changes in a minor release. New gotchas cover the 3.8 Inspect migration, the 3.9 React 18 requirement and removed renderers, and the 3.10 docstring check.
+- The `fulcro` skill documents the Fulcro 3.9 default React key for components with an ident, the `:use-hooks? :pure` option, the 3.10 compile error for a misplaced `defsc` docstring, the removed pre-React-18 renderers, and the `inspect.repl-tool` REPL flight recorder. The project-workflows reference adds Fulcro's headless JVM testing support.
+
 ## [0.1.13] - 2026-09-26
 
 ### Fixed

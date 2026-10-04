@@ -134,7 +134,7 @@ The skill writes source when the `format` step runs without `--report`. With `--
 /fulcro-upgrade all                # synonym for (no argument)
 ```
 
-The default rewrites `:mvn/version` for `com.fulcrologic/fulcro` (and optionally `fulcro-rad`, `guardrails`) in `deps.edn`, then runs `clj -P`, the compile, and the test suites. With `--report`, the skill prints the current and latest versions for each artifact found in `deps.edn` and surfaces the upstream `CHANGELOG.adoc` for major version jumps. No writes. No compile. No tests.
+The default rewrites `:mvn/version` for `com.fulcrologic/fulcro` (and `fulcro-rad`, `guardrails`, and `fulcro-inspect` when present) in `deps.edn`, then runs `clj -P`, the compile, and the test suites. With `--report`, the skill prints the current and latest versions for each artifact found in `deps.edn` and surfaces the upstream commit history between release tags for minor and major version jumps. No writes. No compile. No tests.
 
 ### `/fulcro-smells-fix` -- mutating skill with `--report` (placeholder)
 

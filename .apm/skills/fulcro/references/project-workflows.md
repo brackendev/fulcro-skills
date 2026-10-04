@@ -54,48 +54,51 @@ File naming uses underscores; namespace declarations use hyphens. `src/main/app/
 
 ## `deps.edn`
 
-A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the usual dev / test / build aliases. The version numbers below are placeholders — check [Clojars](https://clojars.org/) for current releases before pinning.
+A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the usual dev / test / build aliases. The versions below were current on 2026-10-04 (Fulcro 3.10.0). Check [Clojars](https://clojars.org/) and Maven Central for newer releases before pinning.
 
 ```clojure
 {:paths ["src/main" "resources"]
 
- :deps  {org.clojure/clojure         {:mvn/version "1.12.0"}
-         org.clojure/clojurescript   {:mvn/version "1.12.42"}
-         com.fulcrologic/fulcro      {:mvn/version "3.8.0"}
-         com.fulcrologic/guardrails  {:mvn/version "1.2.9"}
+ :deps  {org.clojure/clojure         {:mvn/version "1.12.6"}
+         org.clojure/clojurescript   {:mvn/version "1.12.145"}
+         com.fulcrologic/fulcro      {:mvn/version "3.10.0"}
+         com.fulcrologic/guardrails  {:mvn/version "1.3.4"}
          com.wsscode/pathom3         {:mvn/version "2025.01.16-alpha"}
-         ring/ring-jetty-adapter     {:mvn/version "1.12.1"}
-         ring/ring-defaults          {:mvn/version "0.5.0"}
-         com.cognitect/transit-clj   {:mvn/version "1.0.333"}
-         ch.qos.logback/logback-classic {:mvn/version "1.5.6"}}
+         metosin/muuntaja            {:mvn/version "0.6.12"}
+         ring/ring-jetty-adapter     {:mvn/version "1.15.5"}
+         ring/ring-defaults          {:mvn/version "0.7.1"}
+         com.cognitect/transit-clj   {:mvn/version "1.1.363"}
+         ch.qos.logback/logback-classic {:mvn/version "1.6.5"}}
 
  :aliases
  {:dev   {:extra-paths ["src/dev" "src/test"]
-          :extra-deps  {thheller/shadow-cljs {:mvn/version "2.28.18"}
-                        binaryage/devtools   {:mvn/version "1.0.7"}
-                        org.clojure/tools.namespace {:mvn/version "1.5.0"}}}
+          :extra-deps  {thheller/shadow-cljs           {:mvn/version "3.5.4"}
+                        com.fulcrologic/fulcro-inspect {:mvn/version "1.0.5"}
+                        binaryage/devtools             {:mvn/version "1.0.7"}
+                        org.clojure/tools.namespace    {:mvn/version "1.5.1"}}}
 
   :test  {:extra-paths ["src/test"]
           :extra-deps  {lambdaisland/kaocha   {:mvn/version "1.91.1392"}
-                        fulcrologic/fulcro-spec {:mvn/version "3.2.10"}}
+                        fulcrologic/fulcro-spec {:mvn/version "3.2.11"}}
           :main-opts   ["-m" "kaocha.runner"]}
 
-  :cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.13.0"}}
+  :cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.16.6"}}
            :main-opts  ["-m" "cljfmt.main"]}
 
-  :build {:deps       {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
+  :build {:deps       {io.github.clojure/tools.build {:mvn/version "0.10.14"}}
           :ns-default build}
 
-  :dry4clj {:extra-deps {dry4clj/dry4clj {:mvn/version "0.1.1"}}
+  :dry4clj {:extra-deps {io.github.unclebob/dry4clj {:git/url "https://github.com/unclebob/dry4clj.git"
+                                                     :git/sha "5994ef2bcaaae8d12bcd0afb4f091ae09083228c"}}
             :main-opts  ["-m" "dry4clj.core"]}}}
 ```
+
+shadow-cljs 3.x requires Java 21 or later. Keep the `thheller/shadow-cljs` version in `deps.edn` equal to the `shadow-cljs` npm package version in `package.json`. `dry4clj` is not published to Clojars, so the alias uses a Git coordinate pinned to a commit.
 
 ## `shadow-cljs.edn`
 
 ```clojure
-{:source-paths ["src/main" "src/dev" "src/test"]
- :dependencies []                            ; deps come from deps.edn via :deps true
- :deps         true
+{:deps         {:aliases [:dev]}             ; source paths and libraries come from deps.edn, including the :dev alias
 
  :nrepl        {:port 9000}
 
@@ -106,7 +109,7 @@ A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the
          :output-dir "resources/public/js"
          :asset-path "/js"
          :modules    {:main {:init-fn app.client/init}}
-         :devtools   {:preloads [com.fulcrologic.fulcro.inspect.preload
+         :devtools   {:preloads [com.fulcrologic.devtools.chrome-preload
                                  com.fulcrologic.fulcro.inspect.dom-picker-preload]
                       :after-load app.client/refresh}}
 
@@ -121,7 +124,7 @@ A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the
          :ns-regexp "-test$"}}}
 ```
 
-`:devtools/:preloads` are critical for Fulcro Inspect. The `binaryage/devtools` dependency must also be on the classpath (declared in the `:dev` alias of `deps.edn`).
+`:deps {:aliases [:dev]}` matters. shadow-cljs, `fulcro-inspect`, and `binaryage/devtools` are declared only in the `:dev` alias, and `:deps true` would build without them. With `:deps`, shadow-cljs ignores `:source-paths` and uses the `deps.edn` paths, so `src/dev` and `src/test` come from the alias's `:extra-paths`. The `chrome-preload` connects the app to the Fulcro Inspect Chrome extension. Use `com.fulcrologic.devtools.electron-preload` for the Electron app instead. The preload alone does not register the app: `app.client/init` must also call `(ido (it/add-fulcro-inspect! SPA))`, as shown in the Fulcro Inspect section of the `fulcro` skill. General shadow-cljs configuration is covered by the [`clojurescript`](https://github.com/brackendev/clojurescript-skills) skill.
 
 ## `dev/user.clj`
 
@@ -160,7 +163,7 @@ npx shadow-cljs watch main           # terminal 1: ClojureScript watch + dev HTT
 clj -A:dev                           # terminal 2: server REPL; (start) to launch Jetty
 ```
 
-Open `http://localhost:8000` for the dev HTTP server (serving `resources/public`). The Fulcro client at `app.client/init` will mount; Inspect appears as a Chrome DevTools tab once the page has loaded.
+Open `http://localhost:8000` for the dev HTTP server (serving `resources/public`). The Fulcro client at `app.client/init` will mount. Inspect appears as a Chrome DevTools tab, or in the Electron app, once the page has loaded and `add-fulcro-inspect!` has run. Install the extension or the Electron app from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases).
 
 The default file-save loop:
 
@@ -232,9 +235,11 @@ The Fulcro HTTP remote on the client sends transit-encoded EQL; the server reads
 | Server-side units | [`fulcro-spec`](https://github.com/fulcrologic/fulcro-spec) + [`kaocha`](https://github.com/lambdaisland/kaocha) | `clj -M:test` |
 | Client-side units | `fulcro-spec` + shadow-cljs `:test` build | `npx shadow-cljs compile test`, open the test page |
 | CI client tests | shadow-cljs `:ci` (Karma) | `npx shadow-cljs compile ci && npx karma start` |
-| Integration | `fulcro-spec` with `fulcro/checksum-state` and component stubs | Run alongside the unit suites |
+| Headless integration | `com.fulcrologic.fulcro.headless` (Fulcro 3.9+) with `fulcro-spec` | `clj -M:test`, with components in `.cljc` files |
 
-`fulcro-spec`'s `(specification ...)` / `(behavior ...)` / `(assertions ...)` macros are BDD-flavored wrappers over `clojure.test`. They produce structured output that Kaocha and the browser test runner both consume.
+`fulcro-spec`'s `(specification ...)` / `(behavior ...)` / `(assertions ...)` macros are BDD-flavored wrappers over `clojure.test`. They produce structured output that Kaocha and the browser test runner both consume. `provided` and `when-mocking` stub functions inside a test.
+
+Fulcro 3.9 added headless JVM support for full-stack tests without a browser. `(h/build-test-app {:root-class Root :remotes {:remote (lr/sync-remote handler)}})` from `com.fulcrologic.fulcro.headless` and `com.fulcrologic.fulcro.headless.loopback-remotes` builds an app with synchronous transaction processing and captured render frames. `lr/pathom-remote` and `lr/fulcro-ring-remote` route the remote through a Pathom parser or the real Ring stack. `h/last-frame` returns the latest render, and `com.fulcrologic.fulcro.headless.hiccup` (`rendered-tree->hiccup`, `find-by-id`, `click!`, `type-text!`) inspects and drives the rendered output. Components must be in `.cljc` files so the JVM can load them. Transaction and network capture (`h/captured-transactions`, `h/captured-network-events`) requires the JVM property `-Dcom.fulcrologic.fulcro.inspect=true`.
 
 ## `guardrails`
 
@@ -251,6 +256,7 @@ For shadow-cljs, set the flag in `shadow-cljs.edn` under `:jvm-opts`. Guardrails
 | Package | Purpose | Status |
 |---------|---------|--------|
 | [`fulcro-rad`](https://github.com/fulcrologic/fulcro-rad) | Rapid Application Development on top of Fulcro: attribute-based data modeling, generated forms and reports. | Active. Useful for CRUD-heavy apps; an application can mix RAD and hand-built UI. |
+| [`fulcro-inspect`](https://github.com/fulcrologic/fulcro-inspect) | Development-time debugger: the library plus a Chrome extension or Electron app from the releases page. | Active. Required as a development dependency since Fulcro 3.8. |
 | [`fulcro-spec`](https://github.com/fulcrologic/fulcro-spec) | BDD testing macros for `clojure.test`. | Active. Standard in Fulcro test suites. |
 | [`fulcro-i18n`](https://github.com/fulcrologic/fulcro-i18n) | Internationalization (string extraction, translations). | Active. Integrates with Fulcro 3. |
 | [`fulcro-incubator`](https://github.com/fulcrologic/fulcro-incubator) | Experimental features that mature before joining core (additional state-machine patterns, pessimistic mutations, DB helpers). | Active, experimental. |

@@ -21,13 +21,13 @@ This skill is exempt from the `all` and `<path>` rows of the standard scope voca
 
 ## Mutation
 
-Mutates by default: creates the project directory and writes `deps.edn`, `shadow-cljs.edn`, `package.json`, the client entry files (`app.application`, `app.client`, `app.ui.root`, `app.model.session`), the server files (`app.server.main`, `app.server.pathom`, `app.server.middleware`), `src/dev/user.clj`, `.clj-kondo/config.edn` plus upstream imports, `.cljfmt.edn`, `resources/public/index.html`, `resources/dev.html`, and `.gitignore`. Also runs `npm install` and `npx shadow-cljs compile main` as a first-build sanity check. No `--report` flag; preview the side effects by reading this `SKILL.md`.
+Mutates by default: creates the project directory and writes `deps.edn`, `shadow-cljs.edn`, `package.json`, the client entry files (`app.application`, `app.client`, `app.ui.root`, `app.model.session`), the server files (`app.server.main`, `app.server.pathom`, `app.server.middleware`), `src/dev/user.clj`, `tests.edn`, a sample server test (`app.server.pathom-test`), `.clj-kondo/config.edn` plus upstream imports, `.cljfmt.edn`, `resources/public/index.html`, `resources/dev.html`, and `.gitignore`. Also runs `npm install`, `npx shadow-cljs compile main`, and `clj -M:test` as a first-build sanity check. No `--report` flag; preview the side effects by reading this `SKILL.md`.
 
 ## Prerequisites
 
 Verify these are installed before proceeding. If any are missing, stop and tell the user.
 
-- Java 17 or higher: `java --version`
+- Java 21 or higher (required by shadow-cljs 3.x): `java --version`
 - Clojure CLI: `clj --version`
 - Node + npm (for shadow-cljs): `node --version` and `npm --version`
 - `clj-kondo` (linter): `clj-kondo --version`
@@ -54,7 +54,7 @@ curl -sSL -A 'Mozilla/5.0' \
   | python3 -c "import json,sys; print(json.load(sys.stdin)['latest_release'])"
 ```
 
-Do the same for `com.fulcrologic/guardrails` and `com.wsscode/pathom3`. If a fetch fails, ask the user for the versions to use. Do not invent a version number.
+Do the same for `com.fulcrologic/guardrails`, `com.fulcrologic/fulcro-inspect`, and `com.wsscode/pathom3`. If a fetch fails, ask the user for the versions to use. Do not invent a version number.
 
 ### 3. Create Project Directory and Source Roots
 
@@ -68,43 +68,46 @@ cd <project-name>
 ```clojure
 {:paths ["src/main" "resources"]
 
- :deps  {org.clojure/clojure          {:mvn/version "1.12.0"}
-         org.clojure/clojurescript    {:mvn/version "1.12.42"}
+ :deps  {org.clojure/clojure          {:mvn/version "1.12.6"}
+         org.clojure/clojurescript    {:mvn/version "1.12.145"}
          com.fulcrologic/fulcro       {:mvn/version "<latest-fulcro-version>"}
          com.fulcrologic/guardrails   {:mvn/version "<latest-guardrails-version>"}
          com.wsscode/pathom3          {:mvn/version "<latest-pathom3-version>"}
-         metosin/muuntaja             {:mvn/version "0.6.10"}
-         ring/ring-jetty-adapter      {:mvn/version "1.12.1"}
-         ring/ring-defaults           {:mvn/version "0.5.0"}
-         com.cognitect/transit-clj    {:mvn/version "1.0.333"}
-         ch.qos.logback/logback-classic {:mvn/version "1.5.6"}}
+         metosin/muuntaja             {:mvn/version "0.6.12"}
+         ring/ring-jetty-adapter      {:mvn/version "1.15.5"}
+         ring/ring-defaults           {:mvn/version "0.7.1"}
+         com.cognitect/transit-clj    {:mvn/version "1.1.363"}
+         ch.qos.logback/logback-classic {:mvn/version "1.6.5"}}
 
  :aliases
  {:dev    {:extra-paths ["src/dev" "src/test"]
-           :extra-deps  {thheller/shadow-cljs        {:mvn/version "2.28.18"}
-                         binaryage/devtools          {:mvn/version "1.0.7"}
-                         org.clojure/tools.namespace {:mvn/version "1.5.0"}}}
+           :extra-deps  {thheller/shadow-cljs           {:mvn/version "3.5.4"}
+                         com.fulcrologic/fulcro-inspect {:mvn/version "<latest-fulcro-inspect-version>"}
+                         binaryage/devtools             {:mvn/version "1.0.7"}
+                         org.clojure/tools.namespace    {:mvn/version "1.5.1"}}}
 
   :test   {:extra-paths ["src/test"]
            :extra-deps  {lambdaisland/kaocha     {:mvn/version "1.91.1392"}
-                         fulcrologic/fulcro-spec {:mvn/version "3.2.10"}}
+                         fulcrologic/fulcro-spec {:mvn/version "3.2.11"}}
            :main-opts   ["-m" "kaocha.runner"]}
 
-  :cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.13.0"}}
+  :cljfmt {:extra-deps {dev.weavejester/cljfmt {:mvn/version "0.16.6"}}
            :main-opts  ["-m" "cljfmt.main"]}
 
-  :build  {:deps       {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
+  :build  {:deps       {io.github.clojure/tools.build {:mvn/version "0.10.14"}}
            :ns-default build}
 
-  :dry4clj {:extra-deps {dry4clj/dry4clj {:mvn/version "0.1.1"}}
+  :dry4clj {:extra-deps {io.github.unclebob/dry4clj {:git/url "https://github.com/unclebob/dry4clj.git"
+                                                     :git/sha "5994ef2bcaaae8d12bcd0afb4f091ae09083228c"}}
             :main-opts  ["-m" "dry4clj.core"]}}}
 ```
+
+The fixed versions above were current on 2026-10-04. Keep `thheller/shadow-cljs` equal to the `shadow-cljs` npm version in `package.json`. `dry4clj` is not published to Clojars, so the alias uses a Git coordinate pinned to a commit.
 
 ### 5. Create `shadow-cljs.edn`
 
 ```clojure
-{:source-paths ["src/main" "src/dev" "src/test"]
- :deps         true
+{:deps         {:aliases [:dev]}             ; source paths and libraries come from deps.edn
  :nrepl        {:port 9000}
  :dev-http     {8000 "resources/public"}
 
@@ -113,7 +116,7 @@ cd <project-name>
          :output-dir "resources/public/js"
          :asset-path "/js"
          :modules    {:main {:init-fn app.client/init}}
-         :devtools   {:preloads   [com.fulcrologic.fulcro.inspect.preload
+         :devtools   {:preloads   [com.fulcrologic.devtools.chrome-preload
                                    com.fulcrologic.fulcro.inspect.dom-picker-preload]
                       :after-load app.client/refresh}}
 
@@ -135,14 +138,14 @@ cd <project-name>
   "name": "<project-name>",
   "private": true,
   "devDependencies": {
-    "shadow-cljs": "2.28.18",
+    "shadow-cljs": "3.5.4",
     "karma": "6.4.4",
     "karma-chrome-launcher": "3.2.0",
     "karma-cljs-test": "0.1.0"
   },
   "dependencies": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   }
 }
 ```
@@ -154,8 +157,8 @@ cd <project-name>
 ```clojure
 (ns app.application
   (:require
-   [com.fulcrologic.fulcro.application :as app]
-   [com.fulcrologic.fulcro.networking.http-remote :as http]))
+    [com.fulcrologic.fulcro.application :as app]
+    [com.fulcrologic.fulcro.networking.http-remote :as http]))
 
 (defonce SPA
   (app/fulcro-app
@@ -167,11 +170,14 @@ cd <project-name>
 ```clojure
 (ns app.client
   (:require
-   [com.fulcrologic.fulcro.application :as app]
-   [app.application :refer [SPA]]
-   [app.ui.root :as root]))
+    [com.fulcrologic.devtools.common.target :refer [ido]]
+    [com.fulcrologic.fulcro.application :as app]
+    [fulcro.inspect.tool :as it]
+    [app.application :refer [SPA]]
+    [app.ui.root :as root]))
 
 (defn ^:export init []
+  (ido (it/add-fulcro-inspect! SPA))
   (app/mount! SPA root/Root "app")
   (js/console.log "Loaded"))
 
@@ -185,10 +191,10 @@ cd <project-name>
 ```clojure
 (ns app.ui.root
   (:require
-   [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
-   [com.fulcrologic.fulcro.dom :as dom]))
+    [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
+    [com.fulcrologic.fulcro.dom :as dom]))
 
-(defsc Root [this {:root/keys [greeting]}]
+(defsc Root [_this {:root/keys [greeting]}]
   {:query         [:root/greeting]
    :initial-state (fn [_] {:root/greeting "Hello from Fulcro"})}
   (dom/div
@@ -202,7 +208,7 @@ A minimal example mutation, present so the project has a template to copy.
 ```clojure
 (ns app.model.session
   (:require
-   [com.fulcrologic.fulcro.mutations :as m :refer [defmutation]]))
+    [com.fulcrologic.fulcro.mutations :as m :refer [defmutation]]))
 
 (defmutation set-greeting [{:keys [greeting]}]
   (action [{:keys [state]}]
@@ -216,8 +222,8 @@ A minimal example mutation, present so the project has a template to copy.
 ```clojure
 (ns app.server.main
   (:require
-   [ring.adapter.jetty :as jetty]
-   [app.server.middleware :as middleware]))
+    [ring.adapter.jetty :as jetty]
+    [app.server.middleware :as middleware]))
 
 (defn start! [{:keys [port] :or {port 3000}}]
   (jetty/run-jetty middleware/app {:port port :join? false}))
@@ -234,9 +240,9 @@ A minimal example mutation, present so the project has a template to copy.
 ```clojure
 (ns app.server.pathom
   (:require
-   [com.wsscode.pathom3.connect.indexes :as pci]
-   [com.wsscode.pathom3.connect.operation :as pco]
-   [com.wsscode.pathom3.interface.eql :as p.eql]))
+    [com.wsscode.pathom3.connect.indexes :as pci]
+    [com.wsscode.pathom3.connect.operation :as pco]
+    [com.wsscode.pathom3.interface.eql :as p.eql]))
 
 (pco/defresolver server-greeting [_ _]
   {::pco/output [:root/greeting]}
@@ -254,9 +260,9 @@ A minimal example mutation, present so the project has a template to copy.
 ```clojure
 (ns app.server.middleware
   (:require
-   [muuntaja.middleware :as muuntaja]
-   [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
-   [app.server.pathom :as pathom]))
+    [muuntaja.middleware :as muuntaja]
+    [ring.middleware.defaults :refer [wrap-defaults site-defaults]]
+    [app.server.pathom :as pathom]))
 
 (defn api-handler [{:keys [body-params]}]
   {:status 200
@@ -274,13 +280,15 @@ A minimal example mutation, present so the project has a template to copy.
                          (assoc-in [:security :anti-forgery] false)))))
 ```
 
-### 9. Create `src/dev/user.clj`
+### 9. Create `src/dev/user.clj`, `tests.edn`, and a Sample Test
+
+#### `src/dev/user.clj`
 
 ```clojure
 (ns user
   (:require
-   [clojure.tools.namespace.repl :refer [refresh]]
-   [app.server.main :as server]))
+    [clojure.tools.namespace.repl :refer [refresh]]
+    [app.server.main :as server]))
 
 (defonce system (atom nil))
 
@@ -300,10 +308,38 @@ A minimal example mutation, present so the project has a template to copy.
   (refresh :after 'user/start))
 ```
 
+#### `tests.edn`
+
+Kaocha looks in `test/` by default. Point it at `src/test`, where this layout keeps tests:
+
+```clojure
+#kaocha/v1
+{:tests [{:id         :unit
+          :test-paths ["src/test"]}]}
+```
+
+#### `src/test/app/server/pathom_test.clj`
+
+A server test so `clj -M:test` exercises the Pathom parser from the first run:
+
+```clojure
+(ns app.server.pathom-test
+  (:require
+    [clojure.test :refer [deftest]]
+    [fulcro-spec.core :refer [assertions]]
+    [app.server.pathom :as pathom]))
+
+(deftest server-greeting-test
+  (assertions
+    "resolves the root greeting"
+    (pathom/process [:root/greeting]) => {:root/greeting "Hello from the Pathom server"}))
+```
+
 ### 10. Create `.clj-kondo/config.edn`
 
 ```clojure
-{:linters {:unresolved-symbol    {:level :warning}
+{:linters {:unresolved-symbol    {:level   :warning
+                                  :exclude [(fulcro-spec.core/assertions [=> =fn=> =throws=> =check=>])]}
            :unresolved-namespace {:level :warning}}
  :lint-as {com.fulcrologic.fulcro.components/defsc clojure.core/defn
            com.fulcrologic.fulcro.mutations/defmutation clojure.core/defn
@@ -314,6 +350,8 @@ A minimal example mutation, present so the project has a template to copy.
            cljs.test/testing clojure.test/testing
            cljs.test/is      clojure.test/is}}
 ```
+
+fulcro-spec ships no clj-kondo configuration, so the `:exclude` entry keeps its `=>` arrows inside `assertions` from being reported as unresolved symbols.
 
 Import upstream exports so framework macros and library hooks are linted from their canonical configs:
 
@@ -326,15 +364,20 @@ Commit `.clj-kondo/` to version control. Re-run `clj-kondo --copy-configs --depe
 ### 11. Create `.cljfmt.edn`
 
 ```clojure
-{:paths   ["src" "test"]
- :indents {ns          [[:inner 0]]
-           defn        [[:inner 0]]
-           fn          [[:inner 0]]
-           defsc       [[:inner 0]]
-           defmutation [[:inner 0]]
-           defrouter   [[:inner 0]]
-           defresolver [[:inner 0]]}}
+{:paths                          ["src"]
+ :function-arguments-indentation :cursive
+ :extra-indents                  {defsc         [[:inner 0]]
+                                  defmutation   [[:inner 0]]
+                                  defrouter     [[:inner 0]]
+                                  defresolver   [[:inner 0]]
+                                  action        [[:inner 0]]
+                                  remote        [[:inner 0]]
+                                  ok-action     [[:inner 0]]
+                                  error-action  [[:inner 0]]
+                                  result-action [[:inner 0]]}}
 ```
+
+Use `:extra-indents`, not `:indents`. In current cljfmt, `:indents` replaces every default rule, so `def`, `if`, `when`, and `let` lose their standard indentation. `:cursive` gives the two-space argument indentation that Fulcro's own source and `fulcro-template` use. The mutation section names (`action`, `remote`, and the result sections) keep `defmutation` bodies at two spaces.
 
 ### 12. Create `resources/public/index.html` and `resources/dev.html`
 
@@ -377,9 +420,10 @@ resources/public/js/
 ```bash
 npm install
 npx shadow-cljs compile main
+clj -M:test
 ```
 
-`shadow-cljs compile main` produces `resources/public/js/main.js` and validates the build configuration. If the compile fails, capture the output and report the error rather than continuing.
+`shadow-cljs compile main` produces `resources/public/js/main.js` and validates the build configuration. `clj -M:test` runs the sample server test through Kaocha. If either command fails, capture the output and report the error rather than continuing.
 
 ### 15. Report
 
@@ -402,6 +446,8 @@ Created:
   src/main/app/server/pathom.clj
   src/main/app/server/middleware.clj
   src/dev/user.clj
+  src/test/app/server/pathom_test.clj
+  tests.edn
   resources/public/index.html
   resources/dev.html
   .clj-kondo/config.edn
@@ -423,8 +469,9 @@ Run /clj-fix for the host-neutral checks.
 
 ## Gotchas
 
-- **Fulcro Inspect requires the Chrome extension.** Install [Fulcro Inspect](https://chrome.google.com/webstore/detail/fulcro-inspect) from the Chrome Web Store before running the dev build. The `:preloads` only register; the Inspect DevTools tab does not appear without the extension installed.
-- **`binaryage/devtools` must be on the classpath.** The `:dev` alias adds it. Without it, the Inspect preload still works, but Clojure data in the browser console renders as opaque JS objects.
+- **Fulcro Inspect needs the extension or the Electron app.** Install the Chrome extension (`fulcro-inspect-chrome-<version>.zip`) or the Electron app from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases), then open a new tab or restart Chrome. The old Chrome Web Store extension does not work with Fulcro 3.8 or later. The scaffold uses `com.fulcrologic.devtools.chrome-preload`. Switch it to `com.fulcrologic.devtools.electron-preload` for the Electron app.
+- **Inspect needs both the preload and the install call.** `app.client/init` calls `(ido (it/add-fulcro-inspect! SPA))`. `ido` removes the call from release builds. Removing the call leaves the preload connected but shows no app in Inspect. The pre-3.8 preload `com.fulcrologic.fulcro.inspect.preload` only logs "Inspect NOT installed".
+- **shadow-cljs must read the `:dev` alias.** shadow-cljs, `fulcro-inspect`, and `binaryage/devtools` live in the `:dev` alias, so `shadow-cljs.edn` sets `:deps {:aliases [:dev]}`. With `:deps true`, the build cannot find those libraries.
 - **shadow-cljs build slot exhaustion.** `shadow-cljs watch main` holds a process; the second `compile` or `watch` invocation from a fresh shell may fail with "build target main is already running". Reach for `npx shadow-cljs stop` (or kill the watch process) before re-running.
 - **`/api` route disables CSRF.** The middleware above sets `:anti-forgery false` for the API. Keep CSRF protection enabled elsewhere; an `/api` endpoint that authenticates user sessions through cookies needs additional protection (origin checks, token-bound requests).
 - **Karma test build needs Chrome.** `npx shadow-cljs compile ci` writes a Karma test runner; running it requires `karma-chrome-launcher` and a Chrome (or Chromium) binary on `PATH`. The browser-test target (`:test`) only needs a browser to open the test page manually.

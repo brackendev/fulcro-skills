@@ -75,7 +75,7 @@ clj -M:cljfmt check
 
 Report pass if exit code is 0, fail otherwise. Show any formatting changes (under `fix`) or the diff (under `check`).
 
-The project's `.cljfmt.edn` should include indentation entries for Fulcro macros (`defsc`, `defmutation`, `defrouter`, `defresolver`). The `/fulcro-new` skill writes them; older projects may need to be updated.
+The project's `.cljfmt.edn` should include indentation entries for Fulcro macros (`defsc`, `defmutation`, `defrouter`, `defresolver`) and the mutation sections under `:extra-indents`. Current cljfmt treats `:indents` as a replacement for every default rule, so a project that lists Fulcro macros under `:indents` loses standard indentation for `def`, `if`, and `let`, and `cljfmt fix` rewrites much of the codebase. The `/fulcro-new` skill writes the `:extra-indents` form. Report an `:indents`-only configuration instead of running `fix` over it.
 
 ### 3. Test
 
@@ -140,7 +140,7 @@ clj -M:dry4clj --edn <source-paths...>
 
 Do not pass `--threshold`, `--min-lines`, or `--min-nodes`. Scoping to production source removes the dominant noise, which is repeated test scaffolding; tightening the score or size knobs either hides real matches or has no effect on exact-structure duplicates.
 
-dry4clj always exits 0, and the EDN output never prints a clean-state message, so do not use the exit code or any text match as the signal. Parse the EDN map `{:candidates [...]}` and classify the result:
+dry4clj exits 0 after a completed scan, and the EDN output never prints a clean-state message, so do not use the exit code or any text match to detect duplicates. A non-zero exit means the scan itself failed (for example, a file the reader cannot parse) and is reported as `ERROR`. Parse the EDN map `{:candidates [...]}` and classify the result:
 
 | Result   | Condition                                                                                                                  |
 |----------|----------------------------------------------------------------------------------------------------------------------------|
@@ -176,4 +176,5 @@ If `--report` was passed, append `(report mode: format checked, not written)` af
 - **shadow-cljs holds a daemon process.** `shadow-cljs watch` from another terminal can lock the `:main` build slot. Stop it (`npx shadow-cljs stop`) before running `release main`.
 - **Server tests via Kaocha and client tests via shadow-cljs run in different JVMs.** A failing test in one suite does not abort the other. The aggregate report distinguishes server (PASS) from client (PASS) so partial failures are clear.
 - **Pathom resolvers can fail at test time without failing at compile time.** Invalid `::pco/output` declarations (for example, declaring an attribute the resolver does not actually return) only surface during query execution. The test suite is the place to catch this.
+- **dry4clj cannot read auto-resolved namespaced keywords.** dry4clj reads source without resolving namespace aliases, so a keyword such as `::pco/output` stops the scan with "Invalid token" and a non-zero exit. Pathom 3 resolvers use this form routinely, so most Fulcro projects get `ERROR` from the dry step at the dry4clj commit pinned by `/fulcro-new`. Report the file and the error, and keep it advisory. Do not rewrite source to work around the reader.
 - **`dry` is a duplicate-form scan, not a dry-run mode.** The step keyword names the dry4clj tool. To preview the format step without writing, pass `--report`, not `dry`.
