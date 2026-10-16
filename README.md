@@ -2,7 +2,7 @@
 
 [Fulcro](https://github.com/fulcrologic/fulcro) full-stack framework skills packaged as an [APM](https://github.com/microsoft/apm) plugin. One install deploys the full set to every runtime in APM's default target set: Claude Code, Codex, OpenCode, Cursor, Copilot, Gemini, Windsurf, Kiro, and Grok Build. Antigravity is supported by naming it explicitly with `--target antigravity`.
 
-Skills follow the [Agent Skills](https://agentskills.io) open standard. Two auto-trigger from conversation context (`fulcro`, `fulcro-lenses`); the rest appear as slash commands.
+Skills follow the [Agent Skills](https://agentskills.io) open standard. Two auto-trigger from conversation context (`fulcro`, `fulcro-lenses`); the rest appear as slash commands. The agent can also run `/fulcro-fix` from a natural-language request. `/fulcro-new`, `/fulcro-upgrade`, and `/fulcro-smells-fix` run only as typed slash commands.
 
 This package layers on top of three companions: the host-neutral [clojure-skills](https://github.com/brackendev/clojure-skills) baseline, [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) for the ClojureScript client, and [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) for the JVM Clojure server. Install all four together so the `clojure` skill handles cross-dialect style, the `clojurescript` skill handles JavaScript interop and the shadow-cljs workflow, the `clojure-jvm` skill handles Java interop and the Clojure CLI / `tools.build` workflow, and this package adds Fulcro-aware components, mutations, queries, loads, routing, forms, UI state machines, and the Pathom 3 server.
 

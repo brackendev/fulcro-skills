@@ -89,7 +89,7 @@ A skill is classified by its actual behavior, not by its name. If the name and b
 | `/fulcro-upgrade`       | Mutating        | Yes                    | Rewrites `:mvn/version` for the Fulcro artifacts in `deps.edn`. `--report` prints the current and remote versions without writing. |
 | `/fulcro-smells-fix`    | Mutating        | Yes                    | Placeholder until the Fulcro smells catalog ships. When implemented, mirrors the mutation contract of `/clj-smells-fix`: Stage 1 mechanical and Stage 2 DEFECT-band findings auto-applied; `--report` disables all writes. |
 
-Model-invocable skills (`fulcro`, `fulcro-lenses`) have no argument surface and are not classified here.
+The model-only reference skills (`fulcro`, `fulcro-lenses`) have no argument surface and are not classified here.
 
 ## Section structure
 

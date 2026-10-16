@@ -1,10 +1,15 @@
 ---
 name: fulcro-fix
-description: "Fix a Fulcro project (lint, format, test, advanced, dry); writes formatting by default"
+description: >-
+  Fix a Fulcro project with lint, format, test, advanced, and dry
+  (duplicate-form) steps across the Clojure server and ClojureScript client.
+  The format step writes by default. Use when asked to lint, format, test, or
+  check a Fulcro project, to run its server and client test suites, or to
+  verify a shadow-cljs release build. Use --report to replace the formatting
+  write with cljfmt check.
 argument-hint: "[lint|format|test|advanced|dry] [--report] [all]"
 allowed-tools: Bash, Read, Grep, Glob
 user-invocable: true
-disable-model-invocation: true
 ---
 
 # Fulcro Fix

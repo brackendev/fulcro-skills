@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.15] - 2026-10-17
+
+### Changed
+
+- In Claude Code and Codex, the agent can now run `/fulcro-fix` from a natural-language request, such as "run the Fulcro checks", as well as from the slash command. Its description now states when to use it. `/fulcro-new`, `/fulcro-upgrade`, and `/fulcro-smells-fix` remain user-only.
+
 ## [0.1.14] - 2026-10-04
 
 ### Fixed
