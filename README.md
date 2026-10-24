@@ -2,7 +2,7 @@
 
 [Fulcro](https://github.com/fulcrologic/fulcro) 3 full-stack framework skills packaged as an [APM](https://github.com/microsoft/apm) plugin. One install deploys the full set to every runtime in APM's default target set: Claude Code, Codex, OpenCode, Cursor, Copilot, Gemini, Windsurf, Kiro, and Grok Build. Antigravity is supported by naming it explicitly with `--target antigravity`.
 
-Skills follow the [Agent Skills](https://agentskills.io) open standard. Two auto-trigger from conversation context (`fulcro`, `fulcro-lenses`). The rest appear as slash commands. The agent can also run `/fulcro-fix` from a natural-language request. `/fulcro-new` and `/fulcro-upgrade` run only as typed slash commands. Runtimes differ in how they offer these commands: Codex lists them under `/skills` and runs them as `$name`, OpenCode attaches them with `@name`, and Gemini CLI does not read the user-only setting, so its agent can start any of them.
+Skills follow the [Agent Skills](https://agentskills.io) open standard. Two auto-trigger from conversation context (`fulcro`, `fulcro-lenses`). The rest appear as slash commands. The agent can also run `/fulcro-fix` from a natural-language request. `/fulcro-upgrade` runs only as a typed slash command. Runtimes differ in how they offer these commands: Codex lists them under `/skills` and runs them as `$name`, OpenCode attaches them with `@name`, and Gemini CLI does not read the user-only setting, so its agent can start any of them.
 
 This package layers on top of three companions: the host-neutral [clojure-skills](https://github.com/brackendev/clojure-skills) baseline, [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) for the ClojureScript client, and [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) for the JVM Clojure server. Install all four together so the `clojure` skill handles cross-dialect style, the `clojurescript` skill handles JavaScript interop and the shadow-cljs workflow, the `clojure-jvm` skill handles Java interop and the Clojure CLI / `tools.build` workflow, and this package adds Fulcro-aware components, mutations, queries, loads, routing, forms, UI state machines, and the Pathom 3 server.
 
@@ -15,7 +15,7 @@ Seven sibling APM packages. This package layers on top of [clojure-skills](https
 | [clojure-skills](https://github.com/brackendev/clojure-skills) | Host-neutral [Clojure](https://clojure.org/) family baseline: style, naming, threading, collections, atoms, dispatch, formatting, namespaces, and testing. Triggers on `.clj`, `.cljs`, `.cljc`, `.cljd`. | — |
 | [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) | [Clojure](https://clojure.org/) on the JVM: Java interop, refs / agents / STM, `with-open`, JVM-typed exceptions, `alter-var-root`, and the Clojure CLI / `tools.build` / `clj-kondo` / `cljfmt` / `test-runner` / nREPL workflow. | `clojure-skills` |
 | [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) | [ClojureScript](https://clojurescript.org/) style and tooling: JavaScript interop, externs inference, macro stage separation, `catch :default`, JS-flavored numbers and truthiness, and the `cljs.main` workflow. Triggers on `.cljs`, `.cljc` compiled to JS, `shadow-cljs.edn`, `figwheel-main.edn`. | `clojure-skills` |
-| [biff-skills](https://github.com/brackendev/biff-skills) | [Biff](https://biffweb.com/) 2 web framework on the JVM: scaffolding, conventions, deployment. | `clojure-skills` + `clojure-jvm-skills` |
+| [biff-skills](https://github.com/brackendev/biff-skills) | [Biff](https://biffweb.com/) 2 web framework on the JVM: conventions and deployment. | `clojure-skills` + `clojure-jvm-skills` |
 | [electric-skills](https://github.com/brackendev/electric-skills) | [Electric](https://github.com/hyperfiddle/electric) v3 full-stack reactive framework: `e/defn` components, `e/client` / `e/server` site transfer, `e/for` over `e/diff-by`, `e/watch` state, `e/Token` transactions, `e/Offload`, the `electric-dom3` and `electric-forms5` APIs, and the single-JVM shadow-cljs workflow. Triggers on `hyperfiddle.electric3`, `hyperfiddle.electric-dom3`, `e/defn`, `e/client`, `e/server`, and `com.hyperfiddle/electric`. | `clojure-skills` + `clojurescript-skills` + `clojure-jvm-skills` |
 | [fulcro-skills](https://github.com/brackendev/fulcro-skills) (this package) | [Fulcro](https://github.com/fulcrologic/fulcro) 3 full-stack framework: `defsc` components, idents and the normalized client database, mutations, `df/load!`, dynamic routing, forms, UI state machines, Fulcro Inspect, and the Pathom 3 server. Triggers on `com.fulcrologic.fulcro.*`, `com.fulcrologic.rad.*`, `com.wsscode.pathom3.*`, `defsc`, `defmutation`, `defrouter`, `df/load!`, and ident vectors. | `clojure-skills` + `clojurescript-skills` + `clojure-jvm-skills` |
 | [clojuredart-skills](https://github.com/brackendev/clojuredart-skills) | [ClojureDart](https://github.com/Tensegritics/ClojureDart) on [Flutter](https://flutter.dev/): Dart interop, type hints, `cljd.flutter` directives, async, FFI, REPL, and the Flutter project workflow. Triggers on `.cljd`, `cljd.flutter`. | `clojure-skills` |
@@ -44,14 +44,14 @@ Update later with `apm update [-g]`. Remove with `apm uninstall brackendev/fulcr
 
 ## Requirements
 
-- [Clojure CLI](https://clojure.org/guides/install_clojure) and Java 17 or higher for any skill in this package. Projects built with shadow-cljs 3.x, including those scaffolded by `/fulcro-new`, require Java 21 or higher.
+- [Clojure CLI](https://clojure.org/guides/install_clojure) and Java 17 or higher for any skill in this package. Projects built with shadow-cljs 3.x require Java 21 or higher.
 - [Node and npm](https://nodejs.org/) for the ClojureScript build via [shadow-cljs](https://github.com/thheller/shadow-cljs) (recommended).
 - [clojure-skills](https://github.com/brackendev/clojure-skills) installed alongside, for the host-neutral baseline plus `/clj-fix` and `/clj-smells-fix`.
 - [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) installed alongside, for the ClojureScript-specific guidance the `fulcro` skill defers to (JavaScript interop, externs, macro stage separation, JS numerics, `cljs.main` / `shadow-cljs` workflow).
 - [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) installed alongside, for the JVM-specific guidance the Fulcro server defers to (Java interop, JVM exceptions, refs / agents / STM, the Clojure CLI / `tools.build` / `clj-kondo` / `cljfmt` / `test-runner` / nREPL workflow).
 - [clj-kondo](https://github.com/clj-kondo/clj-kondo) for the lint steps in the user-invoked skills below.
-- The `fulcro-fix` dry step requires a [dry4clj](https://github.com/unclebob/dry4clj) `:dry4clj` alias in `deps.edn`. dry4clj is not published to Clojars, so the alias uses a Git coordinate, as in the `/fulcro-new` scaffold.
-- The Fulcro Inspect Chrome extension or Electron app for development, installed from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases). The old Chrome Web Store extension does not work with Fulcro 3.8 or later. The `/fulcro-new` scaffolding adds the `fulcro-inspect` library, its preload, and the call that registers the app. The Inspect tab only appears when the extension or app is installed.
+- The `fulcro-fix` dry step requires a [dry4clj](https://github.com/unclebob/dry4clj) `:dry4clj` alias in `deps.edn`. dry4clj is not published to Clojars, so the alias uses a Git coordinate. Without the alias, the dry step reports that it was skipped and shows the alias to add.
+- The Fulcro Inspect Chrome extension or Electron app for development, installed from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases). The old Chrome Web Store extension does not work with Fulcro 3.8 or later. The project also needs the `fulcro-inspect` library, its preload, and the call that registers the app, which the `fulcro` skill's Fulcro Inspect section describes. The Inspect tab only appears when the extension or app is installed.
 
 ## Command guide
 
@@ -59,7 +59,6 @@ A quick guide to every slash command. The detailed entries under [Skills](#skill
 
 | Command | Use it when | What it does |
 |---------|-------------------|--------------|
-| `/fulcro-new` | Starting a new Fulcro full-stack project | Scaffolds the ClojureScript client and Clojure JVM server with lint, format, and a development REPL |
 | `/fulcro-fix` | Lint, format, tests, or the advanced build need attention | Runs the fix pipeline across client and server, rewriting files in the format step with `cljfmt fix` |
 | `/fulcro-upgrade` | The Fulcro version is behind | Upgrades `com.fulcrologic/fulcro` and related Fulcro libraries to the latest release, shows the release history for minor and major jumps, and verifies compile and tests |
 
@@ -67,15 +66,7 @@ A quick guide to every slash command. The detailed entries under [Skills](#skill
 
 User-invocable skills in this package share an argument grammar, scope vocabulary, and mutation-as-default rule. See [CONVENTIONS.md](CONVENTIONS.md) for the full standard.
 
-### Scaffolding and quality
-
-#### `/fulcro-new <project-name>`
-
-Scaffold a new Fulcro full-stack project with a ClojureScript client (shadow-cljs build, React 19, Fulcro Inspect), a Clojure JVM server (Pathom 3 parser, Ring + Jetty), `clj-kondo` lint setup, `cljfmt` formatting, and a development REPL.
-
-```bash
-/fulcro-new my-app
-```
+### Quality and upgrades
 
 #### `/fulcro-fix [lint|format|test|advanced|dry] [--report] [all]`
 

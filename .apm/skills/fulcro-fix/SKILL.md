@@ -83,7 +83,23 @@ clj -M:cljfmt check
 
 Report pass if exit code is 0, fail otherwise. Show any formatting changes (under `fix`) or the diff (under `check`).
 
-The project's `.cljfmt.edn` should include indentation entries for Fulcro macros (`defsc`, `defmutation`, `defrouter`, `defresolver`) and the mutation sections under `:extra-indents`. Current cljfmt treats `:indents` as a replacement for every default rule, so a project that lists Fulcro macros under `:indents` loses standard indentation for `def`, `if`, and `let`, and `cljfmt fix` rewrites much of the codebase. The `/fulcro-new` skill writes the `:extra-indents` form. Report an `:indents`-only configuration instead of running `fix` over it.
+The project's `.cljfmt.edn` should include indentation entries for Fulcro macros (`defsc`, `defmutation`, `defrouter`, `defresolver`) and the mutation sections under `:extra-indents`. Current cljfmt treats `:indents` as a replacement for every default rule, so a project that lists Fulcro macros under `:indents` loses standard indentation for `def`, `if`, and `let`, and `cljfmt fix` rewrites much of the codebase. Report an `:indents`-only configuration instead of running `fix` over it, and show the `:extra-indents` form to use:
+
+```clojure
+{:paths                          ["src"]
+ :function-arguments-indentation :cursive
+ :extra-indents                  {defsc         [[:inner 0]]
+                                  defmutation   [[:inner 0]]
+                                  defrouter     [[:inner 0]]
+                                  defresolver   [[:inner 0]]
+                                  action        [[:inner 0]]
+                                  remote        [[:inner 0]]
+                                  ok-action     [[:inner 0]]
+                                  error-action  [[:inner 0]]
+                                  result-action [[:inner 0]]}}
+```
+
+`:cursive` gives the two-space argument indentation that Fulcro's own source and `fulcro-template` use.
 
 ### 3. Test
 
@@ -190,5 +206,5 @@ If `--report` was passed, append `(report mode: format checked, not written)` af
 - **Karma requires Chrome on `PATH`.** `karma-chrome-launcher` looks for a `chrome` (or `chromium`) binary. On headless CI, install the Chrome runtime first (for example, `apt-get install -y chromium-browser` on Debian-based images).
 - **shadow-cljs holds a daemon process.** `shadow-cljs watch` from another terminal can lock the `:main` build slot. Stop it (`npx shadow-cljs stop`) before running `release main`.
 - **Pathom resolvers can fail at test time without failing at compile time.** Invalid `::pco/output` declarations (for example, declaring an attribute the resolver does not actually return) only surface during query execution. The test suite is the place to catch this.
-- **dry4clj cannot read auto-resolved namespaced keywords.** dry4clj reads source without resolving namespace aliases, so a keyword such as `::pco/output` stops the scan with "Invalid token" and a non-zero exit. Pathom 3 resolvers use this form routinely, so most Fulcro projects get `ERROR` from the dry step at the dry4clj commit pinned by `/fulcro-new`. Report the file and the error, and keep it advisory. Do not rewrite source to work around the reader.
+- **dry4clj cannot read auto-resolved namespaced keywords.** dry4clj reads source without resolving namespace aliases, so a keyword such as `::pco/output` stops the scan with "Invalid token" and a non-zero exit. Pathom 3 resolvers use this form routinely, so most Fulcro projects get `ERROR` from the dry step at the dry4clj commit pinned above. Report the file and the error, and keep it advisory. Do not rewrite source to work around the reader.
 - **`dry` is a duplicate-form scan, not a dry-run mode.** The step keyword names the dry4clj tool. To preview the format step without writing, pass `--report`, not `dry`.

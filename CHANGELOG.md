@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.20] - 2026-10-25
+
+### Changed
+
+- When a project's `.cljfmt.edn` lists the Fulcro macros under `:indents`, `/fulcro-fix` now shows the `:extra-indents` configuration to use in its place.
+- The Companion packages table describes biff-skills as covering Biff 2 conventions and deployment, because that package no longer scaffolds projects.
+
+### Removed
+
+- The `/fulcro-new` scaffolding skill is removed. The `fulcro` skill and its project workflows reference still describe the project layout, the `deps.edn` aliases, and the Fulcro Inspect setup.
+
 ## [0.1.19] - 2026-10-24
 
 ### Added
