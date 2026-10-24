@@ -163,7 +163,7 @@ npx shadow-cljs watch main           # terminal 1: ClojureScript watch + dev HTT
 clj -A:dev                           # terminal 2: server REPL; (start) to launch Jetty
 ```
 
-Open `http://localhost:8000` for the dev HTTP server (serving `resources/public`). The Fulcro client at `app.client/init` will mount. Inspect appears as a Chrome DevTools tab, or in the Electron app, once the page has loaded and `add-fulcro-inspect!` has run. Install the extension or the Electron app from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases).
+Open `http://localhost:8000` for the dev HTTP server (serving `resources/public`). The Fulcro client at `app.client/init` will mount. Inspect appears as a Chrome DevTools tab, or in the Electron app, once the page has loaded and `add-fulcro-inspect!` has run. The Fulcro Inspect section of the `fulcro` skill covers installing the extension or the Electron app.
 
 The default file-save loop:
 
@@ -264,4 +264,4 @@ For shadow-cljs, set the flag in `shadow-cljs.edn` under `:jvm-opts`. Guardrails
 | [`guardrails`](https://github.com/fulcrologic/guardrails) | Function specs with `(>defn ...)`; dev-only overhead. | Active. Standard in Fulcro projects that want spec-style contracts. |
 | [`fulcro-garden-css`](https://github.com/fulcrologic/fulcro-garden-css) | Garden-based CSS-in-Clojure for Fulcro components. | Legacy. Most projects use Tailwind, CSS modules, or hand-written CSS instead. |
 
-When using `fulcro-rad`, generated forms use `fo/*` (`com.fulcrologic.rad.form-options`) on top of the `fs/*` form-state algorithms; outside RAD, build the form body in component render and reach for `fs/*` directly.
+The Forms section of the `fulcro` skill covers how RAD's `fo/*` form options relate to the `fs/*` form-state algorithms.

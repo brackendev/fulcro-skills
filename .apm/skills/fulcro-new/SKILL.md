@@ -40,7 +40,7 @@ Outbound network access to `clojars.org` and `npmjs.com` is required for depende
 
 Use `$ARGUMENTS` as the project name. If empty, ask the user for one.
 
-The project name uses hyphens (e.g., `my-app`). The main namespace mirrors the project name (`app` by default for `fulcro-template` parity; ask the user if they prefer a custom namespace like `com.example.my-app`). File paths use underscores.
+The project name uses hyphens (e.g., `my-app`). The main namespace mirrors the project name (`app` by default for `fulcro-template` parity; ask the user if they prefer a custom namespace like `com.example.my-app`). File paths use underscores where the namespace uses hyphens, so `app.ui.person-list` lives at `src/main/app/ui/person_list.cljs`. The skill writes both shapes, so do not rename either by hand after generation.
 
 Confirm the project name and main namespace with the user before continuing.
 
@@ -475,6 +475,5 @@ Run /clj-fix for the host-neutral checks.
 - **shadow-cljs build slot exhaustion.** `shadow-cljs watch main` holds a process; the second `compile` or `watch` invocation from a fresh shell may fail with "build target main is already running". Reach for `npx shadow-cljs stop` (or kill the watch process) before re-running.
 - **`/api` route disables CSRF.** The middleware above sets `:anti-forgery false` for the API. Keep CSRF protection enabled elsewhere; an `/api` endpoint that authenticates user sessions through cookies needs additional protection (origin checks, token-bound requests).
 - **Karma test build needs Chrome.** `npx shadow-cljs compile ci` writes a Karma test runner; running it requires `karma-chrome-launcher` and a Chrome (or Chromium) binary on `PATH`. The browser-test target (`:test`) only needs a browser to open the test page manually.
-- **Namespace and directory naming.** Hyphens in namespaces, underscores in paths. `app.ui.root` lives at `src/main/app/ui/root.cljs`. The skill writes the right shapes; do not rename either by hand after generation.
 - **Pathom 3 vs Pathom 2.** This scaffold uses Pathom 3 (`com.wsscode.pathom3.*`). Existing tutorials sometimes show Pathom 2 (`com.wsscode.pathom.*`); the APIs differ. When porting examples, translate against the [Pathom 3 migration guide](https://pathom3.wsscode.com/docs/migrate-from-pathom2/).
 - **`fulcro-template` is the canonical reference scaffold.** When this skill drifts from upstream conventions, the template wins. Check [`fulcro-template`](https://github.com/fulcrologic/fulcro-template) before reporting a discrepancy as a bug.

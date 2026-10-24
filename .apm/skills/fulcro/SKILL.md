@@ -40,16 +40,16 @@ This skill reflects Fulcro 3.10, which requires React 18 or later and is tested 
 
 ## Key Rules
 
-1. **Define components with `defsc`.** Co-locate `:query`, `:ident`, `:initial-state`, and the render body. Do not split these across multiple forms; they describe one component.
+1. **Define components with `defsc`.** Co-locate `:query`, `:ident`, `:initial-state`, and the render body. Do not split these across multiple forms; they describe one component. Fulcro 3 has no `defui` macro, so rewrite Fulcro 2.x `defui` components with `defsc`.
 2. **Idents are two-tuples `[:table/id value]`.** Use the same `:table/id` keyword for every entity of that type, across query, ident, and initial-state. Singletons use `[:component/id ::ComponentName]`. Ident hygiene is the most common source of silent denormalization.
 3. **Compose child queries and child initial-state through the framework helpers.** `(comp/get-query ChildComponent)` and `(comp/get-initial-state ChildComponent params)` rather than inlining either by hand. This is what lets refactors of a child propagate without breaking parent composition.
 4. **Mutate state only through `defmutation`.** Never `swap!` the state atom from UI code. Place optimistic state in `action`, server work in `remote`, response handling in `ok-action` / `error-action` / `result-action`.
-5. **Pass parent-derived data and callbacks through `(comp/computed factory props {...})`.** Rebuilding callback closures inside the render path forces unnecessary re-renders because function identity changes on every parent render.
+5. **Pass parent-derived data and callbacks through `(comp/computed props {...})`, and keep the callbacks stable.** Fulcro keeps computed props when a targeted update refreshes a child that has a query and an ident from the database. A callback passed in ordinary props is lost on that update. A closure built inline in render, such as `(ui-person (comp/computed person {:on-click (fn [] (delete! this))}))`, is a new function on every parent render, so the child's props never compare equal and the child re-renders every time. Lift the callback into a top-level function that receives the component.
 6. **Load data with `df/load!` and `df/load-field!`.** Use `:target`, `:post-mutation`, and `:marker` rather than wrapping `load!` in custom helpers or hand-merging server responses into the state atom.
-7. **Route with dynamic routers.** `defrouter` + `dr/change-route!` from `com.fulcrologic.fulcro.routing.dynamic-routing`. Legacy union routers (the `defrouter` form from the Fulcro 2.x era) are deprecated; do not reach for them in new code.
+7. **Route with dynamic routers.** `defrouter` + `dr/change-route!` from `com.fulcrologic.fulcro.routing.dynamic-routing`. Legacy union routers (the `defrouter` form from the Fulcro 2.x era, available in Fulcro 3 as `defsc-router` in `com.fulcrologic.fulcro.routing.legacy-ui-routers`) are legacy. Upstream still supports them but advises against them in new applications, so do not reach for them in new code.
 8. **Manage form state through `fs/add-form-config*` and `fs/*` helpers.** Track dirty / pristine, validation, and submission with the form-state algorithms rather than ad-hoc component-local state.
 9. **Pathom 3 resolvers live in `com.wsscode.pathom3.*` and use `(pco/defresolver ...)`.** Mirror client mutation symbols on the server so EQL flows symmetrically through the API.
-10. **Keep transit-serializable values on the wire.** No atoms, channels, refs, functions, or arbitrary deftypes in EQL responses. Pathom returns Clojure data; Fulcro merges it into the normalized DB.
+10. **Keep transit-serializable values on the wire.** Mutation parameters, load parameters, and EQL responses hold only plain Clojure data (maps, vectors, sets, lists, keywords, strings, numbers, booleans, nil, UUIDs, dates). Atoms, channels, refs, functions, and most deftypes throw or silently drop fields when encoded to transit. Pathom returns Clojure data, and Fulcro merges it into the normalized DB.
 11. **Reach for UI State Machines (`com.fulcrologic.fulcro.ui-state-machines`) when a flow needs explicit states.** Login flows, multi-step forms, network retry loops, and complex routing transitions belong in a UISM rather than scattered across mutations.
 
 ## Components (`defsc`)
@@ -78,7 +78,7 @@ Equivalent template forms are accepted for `:ident` (`:ident :person/id`), `:ini
 
 The `:ident` lambda takes no arguments. It sees `this` and the names bound by the argument list, so `id` above comes from the `{:person/keys [id ...]}` destructuring. The `:query` lambda sees only `this`. Writing `props` inside the lambda only works when the argument list binds `props`, for example `[this {:person/keys [id] :as props}]`. The `:initial-state` lambda sees only its own `params` argument.
 
-A docstring goes between the component name and the argument list: `(defsc Person "A person row." [this props] {...} ...)`. Fulcro 3.10 and later refuse to compile a docstring placed after the argument list.
+A docstring goes between the component name and the argument list: `(defsc Person "A person row." [this props] {...} ...)`. In `(defsc Person [this props] "A person." {:query [...]} ...)`, the string and the options map are body forms. Fulcro 3.10 and later reject that shape at compile time with "Docstring is in the wrong position". Earlier versions compile the component with no query, ident, or initial state, and it fails at runtime in confusing ways, so check for a misplaced docstring whenever a component's props are unexpectedly empty.
 
 | Option | Purpose |
 |--------|---------|
@@ -115,7 +115,7 @@ The normalized client database is a Clojure map shaped by ident:
 
 Hygiene rules:
 
-- **One table keyword per entity type.** Pick `:person/id` once and use it everywhere. Mixing `:person/id` and `:user/id` for the same logical thing produces two tables.
+- **One table keyword per entity type.** Pick `:person/id` once and use it in every query, ident, initial-state, and mutation for that entity. Mixing `:person/id` and `:user/id` for the same logical thing, or taking the ident value from anywhere other than the props (next rule), produces two parallel tables that drift out of sync. The symptoms are a list that shows stale rows after an update and a Fulcro Inspect DB tab that shows two tables with overlapping keys.
 - **The ident's value comes from the props.** `(fn [] [:person/id (:person/id props)])` — never a literal from outside the component, never a value pulled from a parent's bindings.
 - **Singletons use `[:component/id ::ComponentName]`.** Reserve this shape for top-level pages, sidebars, and other one-of-a-kind components. The auto-generated keyword is namespaced to the component so it cannot collide.
 - **Idents are stable.** Use the entity's persistent identifier (typically a UUID or database id), not a transient value like an index or a position.
@@ -154,7 +154,7 @@ Compose parent queries from child queries:
     (map ui-person people)))
 ```
 
-The compiler does not validate that the query's shape matches what the server (or initial-state) produces. Mismatches surface as missing data in render, not as a compile error. Cross-check the query against the Pathom resolver output (or the initial-state shape) when something fails to display.
+The compiler does not validate that the query's shape matches what the server (or initial-state) produces. Adding a field to `:query` without updating `:initial-state` or the Pathom resolver produces a missing-data render, not a compile error or an exception. Cross-check the three shapes (query, initial-state, server response) after every component refactor and whenever something fails to display. Fulcro Inspect's DB tab is the fastest way to confirm that the normalized data matches.
 
 ## Mutations
 
@@ -182,12 +182,12 @@ Sections (use the ones you need):
 | Section | Runs |
 |---------|------|
 | `action` | Synchronously, before remote dispatch. Place optimistic state changes here. |
-| `remote` | Returns `true` (send the mutation as-is), `false` (suppress), or an EQL `ast` to shape what the server sees. Multiple remotes named after their keys (`:remote`, `:rest-remote`, …). |
+| `remote` | Returns `true` (send the mutation as-is), `false` (suppress), or an EQL `ast` to shape what the server sees, for example to strip large parameters or rename keys. Return an `ast` only when the wire payload must differ from the client invocation. Multiple remotes named after their keys (`:remote`, `:rest-remote`, …). |
 | `ok-action` | After a successful remote response. `result` is the server's return value. |
 | `error-action` | After a failed remote response. |
 | `result-action` | Runs after every remote result (success or failure). Use it for cleanup that should not branch on outcome. |
 
-`action` is the only place to mutate the client database. The `state` key in the env is an atom; `swap!` on it is the supported way to update normalized data. Direct calls to `swap!` from a button handler bypass the transaction layer, which means Fulcro Inspect cannot record the change and the remote pipeline never runs.
+Update the client database only inside a mutation section. The `state` key in the env is an atom, and `swap!` on it is the supported way to update normalized data: in `action` for optimistic changes, and in `ok-action`, `error-action`, or `result-action` for changes that depend on the server response, as in the example above. Calling `swap!` on the state atom from UI code, such as a button handler or a `useEffect`, bypasses `comp/transact!`. Fulcro Inspect's Transactions tab does not record the change, the remote pipeline does not run, and post-mutation hooks attached to the change do not fire. Transact a `defmutation` instead.
 
 Transact a mutation from the UI through `comp/transact!`:
 
@@ -432,46 +432,13 @@ The Fulcro project shape (`deps.edn` aliases, `shadow-cljs.edn` builds, `dev/use
 
 ## Gotchas
 
-### Ident hygiene failures silently denormalize
-
-Mixing `:person/id` and `:user/id` for the same conceptual entity, or pulling the ident value from anywhere other than `props`, produces two parallel tables in the DB that drift out of sync. Symptoms: a list shows stale rows after an update; Fulcro Inspect's DB tab shows two tables with overlapping keys. Fix: pick one table keyword per entity type and use `(comp/get-ident ComponentName props)` everywhere you need an ident.
-
-### `swap!` on the state atom from UI code bypasses the transaction layer
-
-Calling `swap!` directly from a button handler (or a `useEffect`) sidesteps `comp/transact!`. The transaction tab in Fulcro Inspect will not see the change, the remote pipeline will not run, and post-mutation hooks attached to the change will not fire. Always go through a `defmutation`. Reserve direct `swap!` for the `action` body of a mutation.
-
-### Callbacks rebuilt inline force re-renders
-
-```clojure
-;; bad: a fresh function on every render → child re-renders every time
-(ui-person (comp/computed person {:on-click (fn [] (delete! this))}))
-```
-
-Either lift the callback into a stable form (a top-level function that receives the component) or rely on `comp/computed` with a stable map. React identity comparison is shallow; new closures break it.
-
-### Transit cannot serialize arbitrary types
-
-Atoms, channels, refs, functions, and most deftypes will throw or silently drop fields when encoded to transit. Keep wire payloads to plain Clojure data (maps, vectors, sets, lists, keywords, strings, numbers, booleans, nil, UUIDs, dates).
-
 ### Missing `:initial-state` keeps a component out of the DB
 
 A component without `:initial-state` (or that omits itself from a parent's `:initial-state` composition) never appears in the normalized DB at boot. The component renders as if its props are `nil`. Add `(comp/get-initial-state ChildComponent params)` to the parent's `:initial-state`, or load the data with `df/load!` before navigating.
 
-### Query and state shape drift after refactors
-
-Adding a field to `:query` without updating `:initial-state` (or the Pathom resolver) produces a missing-data render that does not throw. Cross-check the three shapes (query, initial-state, server response) after every component refactor. Fulcro Inspect's DB tab is the fastest way to confirm normalized data matches expectations.
-
-### `remote true` vs returning an EQL `ast`
-
-A `(remote [_] true)` body sends the mutation as-declared. Returning an `ast` from `(remote [env] ...)` shapes what the server sees (for example, to strip large parameters or rename keys). The two are not interchangeable; reach for the `ast` form only when the wire payload must differ from the client invocation.
-
 ### Over-querying causes wasted re-renders
 
 A component that queries data it does not render re-renders whenever that data changes. Either prune the query to what render reads, or split the component so the parent passes a smaller props slice.
-
-### Legacy `defui` and union routers are deprecated
-
-Fulcro 2.x used `defui` (component) and union-table routers (`defrouter` in the legacy namespace). New code uses `defsc` and `com.fulcrologic.fulcro.routing.dynamic-routing/defrouter`. The legacy forms are still callable for migration, but skill output should generate the modern shapes.
 
 ### Fulcro 3 hooks components are real React function components
 
@@ -480,10 +447,6 @@ Setting `:use-hooks? true` produces a function component. Standard React hook ru
 ### Fulcro 3.9 removed the pre-React-18 renderers
 
 Fulcro 3.9 requires React 18 or later and removed rendering code that could not work with React's asynchronous rendering. The removed pieces are the `com.fulcrologic.fulcro.rendering.multiple-roots-renderer`, `ident-optimized-render`, and `keyframe-render2` namespaces, and the `hooks/use-fulcro-mount` function. An app that sets `:optimized-render!` to one of those renderers, or mounts components with `use-fulcro-mount`, fails to compile after the upgrade. Remove the `:optimized-render!` override so the default keyframe renderer applies, and replace floating roots with `hooks/use-component` or `hooks/use-root`. The `react.version18` helpers (`with-react18`, `react18-options`) are now deprecated no-ops and can be deleted.
-
-### A `defsc` docstring after the argument list swallows the options map
-
-In `(defsc Person [this props] "A person." {:query [...]} ...)`, the string and the options map are body forms, so the component compiles with no query, ident, or initial state and fails at runtime in confusing ways. Fulcro 3.10 rejects this shape at compile time with "Docstring is in the wrong position". On earlier versions, check for it whenever a component's props are unexpectedly empty.
 
 ### `with-redefs` is unreliable across the wire
 

@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.18] - 2026-10-24
+
+### Fixed
+
+- The `fulcro` skill and `/fulcro-smells-fix` write `comp/computed` as `(comp/computed props {...})`, the signature Fulcro defines. The `fulcro` skill explains that computed props survive a targeted update, which drops callbacks passed in ordinary props.
+- The `fulcro` skill allows `swap!` on the state atom in `ok-action`, `error-action`, and `result-action`, as its own mutation example does, instead of only in `action`.
+- `/fulcro-fix` creates `.clj-kondo/` and copies the Fulcro and Pathom clj-kondo exports before every lint. Its earlier check looked for `.clj-kondo/.cache/imported`, a path clj-kondo never writes, and clj-kondo copies configurations only into an existing `.clj-kondo/` directory.
+- `/fulcro-upgrade` skips and reports the clj-kondo imports refresh when the project has no `.clj-kondo/` directory.
+- The `fulcro` skill, `fulcro-lenses`, and `/fulcro-smells-fix` say that Fulcro 3 has no `defui` macro and that legacy union routers remain available as `defsc-router`, which upstream supports but advises against in new applications.
+
+### Changed
+
+- The `fulcro` skill states each rule once. Its Gotchas for ident hygiene, `swap!` from UI code, inline callbacks, transit serialization, legacy forms, query drift, `remote` versus an `ast`, and docstring position are now part of the rules they repeated. `/fulcro-fix`, `/fulcro-new`, `/fulcro-upgrade`, and `fulcro-lenses` follow the same pattern.
+
 ## [0.1.17] - 2026-10-24
 
 ### Removed

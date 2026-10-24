@@ -36,7 +36,7 @@ Step keywords are combinable (for example, `/fulcro-fix lint test`). The `--repo
 
 ## Mutation
 
-Only the `format` step writes source. It runs `clj -M:cljfmt fix` by default, rewriting files in place. With `--report`, the step runs `clj -M:cljfmt check`, which exits non-zero when files would change but does not write. The `lint`, `test`, and `dry` steps are pure-read of source regardless of `--report`. The `advanced` step writes shadow-cljs release output under `resources/public/js/` (build artifact, not source) and is unaffected by `--report`.
+Only the `format` step writes source. It runs `clj -M:cljfmt fix` by default, rewriting files in place. With `--report`, the step runs `clj -M:cljfmt check`, which exits non-zero when files would change but does not write. The `lint`, `test`, and `dry` steps are pure-read of source regardless of `--report`. The `advanced` step writes shadow-cljs release output under `resources/public/js/` (build artifact, not source) and is unaffected by `--report`. The `lint` step's bootstrap writes the upstream clj-kondo exports into `.clj-kondo/imports/` and the lint cache into `.clj-kondo/.cache/`. Those are tooling files, not source, and `--report` does not change that write.
 
 This skill excludes vendored, generated, and dependency-locked paths from the file set it walks. The filter combines `.gitignore` matches and a hardcoded floor (`node_modules/`, `vendor/`, `third_party/`, `.bundle/`, `target/`, `build/`, `dist/`, `out/`, `.shadow-cljs/`, `cljd-out/`, `*.lock`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `Gemfile.lock`, `Cargo.lock`, `poetry.lock`, `composer.lock`). The `advanced` step's writes to `resources/public/js/` are build artifacts produced by the compiler itself and are outside the source-mutation scope of the rule. Naming a vendored source path directly through `<path>` or `<glob>` bypasses the filter for that target. When the filter excludes any path, add a single "skipped N vendored or generated paths" line to the report. Under `--report`, list every skipped path. This follows Rule 4 of the fulcro-skills `CONVENTIONS.md`.
 
@@ -46,11 +46,14 @@ Parse `$ARGUMENTS` to determine which steps to run and whether `--report` is pre
 
 ### 1. Lint
 
-Bootstrap upstream Fulcro and Pathom clj-kondo exports if `.clj-kondo/.cache/imported` does not exist:
+Bootstrap the upstream Fulcro and Pathom clj-kondo exports before every lint. clj-kondo copies configurations only into an existing `.clj-kondo/` directory, so create it first:
 
 ```bash
+mkdir -p .clj-kondo
 clj-kondo --copy-configs --dependencies --lint "$(clj -A:dev -Spath)"
 ```
+
+`--dependencies` skips each dependency jar that clj-kondo has already linted, so a repeat run is fast. After a Fulcro or Pathom upgrade, the new jar is linted and its exports are copied into `.clj-kondo/imports/`.
 
 Then lint the project sources:
 
@@ -62,7 +65,7 @@ If the project has no `test/` directory, lint `src` only.
 
 Report pass if exit code is 0 and there are no errors. Show the clj-kondo output regardless.
 
-Without the upstream Fulcro exports, the linter floods on `defsc`, `defmutation`, `defrouter`, and Pathom `defresolver` forms. Reach for the bootstrap step before reporting a flood as a genuine failure.
+Without the upstream Fulcro exports, `defsc`, `defmutation`, `defrouter`, and Pathom `defresolver` forms generate hundreds of false positives. When the lint floods on those forms, confirm that the bootstrap ran and that `.clj-kondo/imports/com.fulcrologic/fulcro/` exists before reporting the flood as a genuine failure.
 
 ### 2. Format
 
@@ -84,7 +87,7 @@ The project's `.cljfmt.edn` should include indentation entries for Fulcro macros
 
 ### 3. Test
 
-Run the server test suite first, then the client test suite. Aggregate the exit codes.
+Run the server test suite first, then the client test suite, even when the server suite fails. Kaocha runs the server tests in the JVM, and the client tests run in Chrome through Karma or in Node, so a failure in one suite does not abort the other. Aggregate the exit codes.
 
 #### Server tests (Kaocha)
 
@@ -171,15 +174,13 @@ Fulcro Fix Results:
   Dry:      PASS/REVIEW/ERROR/SKIPPED
 ```
 
-If `--report` was passed, append `(report mode: format checked, not written)` after the summary. If a lint, format, test, or advanced step fails, stop and report the failure; do not continue to subsequent steps. The dry step is advisory: it never fails the run and never halts the pipeline.
+If `--report` was passed, append `(report mode: format checked, not written)` after the summary. If a lint, format, test, or advanced step fails, stop and report the failure; do not continue to subsequent steps.
 
 ## Gotchas
 
-- **The lint step must bootstrap Fulcro hooks first.** Without `clj-kondo --copy-configs --dependencies`, `defsc` and `defmutation` forms generate hundreds of false positives. Re-run the bootstrap after every Fulcro upgrade.
 - **`shadow-cljs release main` requires `node` and `npm` on `PATH`.** If either is missing, the advanced step is reported as SKIPPED rather than FAIL.
 - **Karma requires Chrome on `PATH`.** `karma-chrome-launcher` looks for a `chrome` (or `chromium`) binary. On headless CI, install the Chrome runtime first (for example, `apt-get install -y chromium-browser` on Debian-based images).
 - **shadow-cljs holds a daemon process.** `shadow-cljs watch` from another terminal can lock the `:main` build slot. Stop it (`npx shadow-cljs stop`) before running `release main`.
-- **Server tests via Kaocha and client tests via shadow-cljs run in different JVMs.** A failing test in one suite does not abort the other. The aggregate report distinguishes server (PASS) from client (PASS) so partial failures are clear.
 - **Pathom resolvers can fail at test time without failing at compile time.** Invalid `::pco/output` declarations (for example, declaring an attribute the resolver does not actually return) only surface during query execution. The test suite is the place to catch this.
 - **dry4clj cannot read auto-resolved namespaced keywords.** dry4clj reads source without resolving namespace aliases, so a keyword such as `::pco/output` stops the scan with "Invalid token" and a non-zero exit. Pathom 3 resolvers use this form routinely, so most Fulcro projects get `ERROR` from the dry step at the dry4clj commit pinned by `/fulcro-new`. Report the file and the error, and keep it advisory. Do not rewrite source to work around the reader.
 - **`dry` is a duplicate-form scan, not a dry-run mode.** The step keyword names the dry4clj tool. To preview the format step without writing, pass `--report`, not `dry`.

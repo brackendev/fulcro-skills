@@ -42,7 +42,7 @@ Read `deps.edn` and note the current `:mvn/version` value for each of:
 - `com.fulcrologic/fulcro-rad` (if present)
 - `com.fulcrologic/guardrails` (if present)
 - `com.fulcrologic/fulcro-inspect` (if present, usually in the `:dev` alias)
-- `com.wsscode/pathom3` (if present; report only, do not bump)
+- `com.wsscode/pathom3` (if present). Report its version but do not update it unless the user explicitly asks, because Pathom 3 is on an alpha track and its releases occasionally include breaking changes.
 
 ### 2. Fetch the Latest Released Versions
 
@@ -75,7 +75,7 @@ When the `com.fulcrologic/fulcro` minor or major version changes, also print the
 
 For each artifact, if the latest version matches the current version, report "Already at the latest version" and skip. Otherwise, update the `:mvn/version` value in `deps.edn` to the latest version. Preserve formatting and surrounding content.
 
-Fulcro ships breaking changes in minor releases (3.9 removed renderers and required React 18 or later). The upstream `CHANGELOG.md` stops at 3.7.2 and is not maintained, so read the commit history between release tags instead. Fulcro tags releases as `fulcro-<version>`:
+Fulcro ships breaking changes in minor releases (3.9 removed renderers and required React 18 or later). Read the commit history between release tags for every minor or major jump, because the upstream `CHANGELOG.md` stops at 3.7.2 and is not maintained. Fulcro tags releases as `fulcro-<version>`:
 
 ```bash
 tmp="$(mktemp -d)"
@@ -123,6 +123,8 @@ Fulcro's clj-kondo exports may have changed across the upgrade:
 clj-kondo --copy-configs --dependencies --lint "$(clj -A:dev -Spath)"
 ```
 
+clj-kondo copies configurations only into an existing `.clj-kondo/` directory. When the project has none, skip this step and report `clj-kondo imports: skipped (no .clj-kondo/ directory)`.
+
 ### 7. Report
 
 Print a summary:
@@ -149,8 +151,6 @@ Recommended next steps:
 ## Gotchas
 
 - **Clojars `latest_release` includes snapshots when no stable release exists.** For long-lived stable channels this is fine; for new ecosystem packages the latest may be a snapshot. Confirm with the user before applying a snapshot version.
-- **`com.wsscode/pathom3` is on an alpha track.** This skill reports the Pathom 3 version but does not bump it without explicit instruction; Pathom 3 alpha releases occasionally include breaking changes.
-- **Minor Fulcro releases can break builds.** Read the tag-range commit history for every minor or major jump. The upstream `CHANGELOG.md` (the former `CHANGELOG.adoc` no longer exists) stops at 3.7.2.
 - **Crossing 3.8 changes the Fulcro Inspect setup.** From 3.8 on, `com.fulcrologic.fulcro.inspect.preload` only logs "Inspect NOT installed". Search `shadow-cljs.edn` for it. The migration adds `com.fulcrologic/fulcro-inspect` to the development alias, replaces the preload with `com.fulcrologic.devtools.chrome-preload` (or `electron-preload`), calls `(ido (it/add-fulcro-inspect! app))` at client startup, and installs the new Chrome extension or Electron app from the fulcro-inspect releases page. The `fulcro` skill's Fulcro Inspect section shows the full setup. Report the needed change and ask before editing files other than `deps.edn`.
 - **Crossing 3.9 requires React 18 or later and removes renderers.** Check `package.json` for `react` and `react-dom` 18 or later (Fulcro 3.10 is tested with React 19). Search the source for `multiple-roots-renderer`, `ident-optimized-render`, `keyframe-render2`, and `use-fulcro-mount`. Those namespaces and that function were removed, so any match fails to compile. Report the matches before applying the upgrade.
 - **Crossing 3.10 rejects misplaced `defsc` docstrings.** A docstring placed after the argument list now fails compilation with "Docstring is in the wrong position". Move it before the argument list.
