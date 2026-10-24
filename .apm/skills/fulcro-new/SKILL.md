@@ -74,14 +74,14 @@ cd <project-name>
          com.fulcrologic/guardrails   {:mvn/version "<latest-guardrails-version>"}
          com.wsscode/pathom3          {:mvn/version "<latest-pathom3-version>"}
          metosin/muuntaja             {:mvn/version "0.6.12"}
-         ring/ring-jetty-adapter      {:mvn/version "1.15.5"}
+         ring/ring-jetty-adapter      {:mvn/version "1.15.6"}
          ring/ring-defaults           {:mvn/version "0.7.1"}
          com.cognitect/transit-clj    {:mvn/version "1.1.363"}
          ch.qos.logback/logback-classic {:mvn/version "1.6.5"}}
 
  :aliases
  {:dev    {:extra-paths ["src/dev" "src/test"]
-           :extra-deps  {thheller/shadow-cljs           {:mvn/version "3.5.4"}
+           :extra-deps  {thheller/shadow-cljs           {:mvn/version "3.5.7"}
                          com.fulcrologic/fulcro-inspect {:mvn/version "<latest-fulcro-inspect-version>"}
                          binaryage/devtools             {:mvn/version "1.0.7"}
                          org.clojure/tools.namespace    {:mvn/version "1.5.1"}}}
@@ -102,7 +102,7 @@ cd <project-name>
             :main-opts  ["-m" "dry4clj.core"]}}}
 ```
 
-The fixed versions above were current on 2026-10-04. Keep `thheller/shadow-cljs` equal to the `shadow-cljs` npm version in `package.json`. `dry4clj` is not published to Clojars, so the alias uses a Git coordinate pinned to a commit.
+The fixed versions above were current on 2026-10-24. Keep `thheller/shadow-cljs` equal to the `shadow-cljs` npm version in `package.json`. `dry4clj` is not published to Clojars, so the alias uses a Git coordinate pinned to a commit.
 
 ### 5. Create `shadow-cljs.edn`
 
@@ -138,14 +138,14 @@ The fixed versions above were current on 2026-10-04. Keep `thheller/shadow-cljs`
   "name": "<project-name>",
   "private": true,
   "devDependencies": {
-    "shadow-cljs": "3.5.4",
+    "shadow-cljs": "3.5.7",
     "karma": "6.4.4",
     "karma-chrome-launcher": "3.2.0",
     "karma-cljs-test": "0.1.0"
   },
   "dependencies": {
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   }
 }
 ```

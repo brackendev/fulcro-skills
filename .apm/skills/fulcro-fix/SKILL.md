@@ -136,9 +136,17 @@ Scan for duplicate top-level forms with [dry4clj](https://github.com/unclebob/dr
 Determine the project's production source directories from its build configuration instead of assuming a directory name:
 
 - `deps.edn`: the top-level `:paths` (the `:dry4clj` alias is defined here). Tests usually live under a separate alias's `:extra-paths`, so scanning `:paths` excludes them.
-- `shadow-cljs.edn`: `:source-paths`.
+- `shadow-cljs.edn`: `:source-paths`, unless `shadow-cljs.edn` sets `:deps`. With `:deps`, shadow-cljs takes its source paths from `deps.edn`, so use the `deps.edn` paths instead.
 
 Scan the production source paths only and exclude test paths. If no configuration declares source paths, scan the source directories that exist in the repository, excluding any test directory. Do not assume `src`.
+
+Check that `deps.edn` defines a `:dry4clj` alias before running the scan. When it does not, report `SKIP` and show the alias to add under `:aliases`:
+
+```clojure
+:dry4clj {:extra-deps {io.github.unclebob/dry4clj {:git/url "https://github.com/unclebob/dry4clj.git"
+                                                    :git/sha "5994ef2bcaaae8d12bcd0afb4f091ae09083228c"}}
+           :main-opts  ["-m" "dry4clj.core"]}
+```
 
 Run dry4clj with EDN output over the resolved paths:
 
@@ -154,8 +162,8 @@ dry4clj exits 0 after a completed scan, and the EDN output never prints a clean-
 |----------|----------------------------------------------------------------------------------------------------------------------------|
 | `PASS`   | `:candidates` is empty.                                                                                                     |
 | `REVIEW` | `:candidates` has one or more entries. List them and continue.                                                             |
-| `ERROR`  | The command cannot run or its output cannot be parsed (for example, the `:dry4clj` alias is missing). Report the cause; do not report `PASS`. |
-| `SKIP`   | No production source path can be identified.                                                                               |
+| `ERROR`  | The command fails or its output cannot be parsed. Report the cause, and do not report `PASS`. |
+| `SKIP`   | No production source path can be identified, or `deps.edn` defines no `:dry4clj` alias. |
 
 For `REVIEW`, sort candidates by exact matches first (`:score` equal to `1.0`), then by descending `min(:left-nodes, :right-nodes)`, then by descending `:score`. Report the scanned source paths, the candidate count, and the highest-priority candidates with their score, node counts, and both file ranges. Note that each candidate needs source inspection before extraction, and that test directories were excluded because repeated test scaffolding is often intentional.
 

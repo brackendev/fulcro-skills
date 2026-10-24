@@ -4,17 +4,13 @@ description: >-
   Translate code-lenses design philosophies into Fulcro-specific patterns.
   Auto-triggers when working on Fulcro code (com.fulcrologic.fulcro.*,
   com.fulcrologic.rad.*, com.wsscode.pathom3.*, defsc, defmutation, defrouter,
-  df/load!, ident vectors) alongside the code-lenses plugin. Layers on top of
+  df/load!, ident vectors) alongside code-lenses skills. Layers on top of
   clojure-lenses (in clojure-skills) and clojurescript-lenses (in
-  clojurescript-skills); records only the Fulcro-specific deltas that come from
-  the normalized client database, ident hygiene, mutations as data, EQL queries,
-  the action / remote / ok-action / error-action split, df/load! over hand-rolled
-  merges, dynamic routing, form-state algorithms, UI state machines, the Pathom
-  3 server, the Fulcro Inspect workflow, and the framework's strong stance on
-  pure render functions. Covers the four default code-lenses philosophies (grug,
-  Honest Code, Tidy First, Parse Don't Validate) and the two opt-in philosophies
-  (APOSD, Legacy Code) that activate when their lens is added with `+aposd` or
-  `+legacy-code` or invoked directly.
+  clojurescript-skills) and records only the Fulcro-specific deltas. Covers
+  the four default code-lenses philosophies (grug, Honest Code, Tidy First,
+  Parse Don't Validate) and the two opt-in philosophies (APOSD, Legacy Code)
+  that activate when their lens is added with `+aposd` or `+legacy-code` or
+  invoked directly.
 user-invocable: false
 ---
 

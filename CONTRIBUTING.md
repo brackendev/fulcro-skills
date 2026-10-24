@@ -13,7 +13,7 @@ For people working on the plugin source. End-user install instructions live in [
 | `README.md` | End-user documentation. |
 | `CHANGELOG.md` | User-facing changes per version. |
 | `CONVENTIONS.md` | Canonical argument grammar, scope vocabulary, and mutation defaults for every user-invocable skill. |
-| `CLAUDE.md`, `TODO.md` | Local working notes. Gitignored globally; never committed. |
+| `AGENTS.md`, `GEMINI.md`, `TODO.md` | Local agent instructions (`GEMINI.md` is a symlink to `AGENTS.md`) and working notes. Gitignored globally and never committed. |
 
 ## APM lockfile rule
 
@@ -23,7 +23,7 @@ Do not add `.claude-plugin/`, `.codex-plugin/`, `.agents/plugins/marketplace.jso
 
 1. Edit `.apm/skills/<name>/SKILL.md`.
 2. Update `README.md` if the change is user-facing.
-3. Add a `CHANGELOG.md` entry under `[Unreleased]` for user-facing changes.
+3. Add a `CHANGELOG.md` entry under `[Unreleased]` for every change to a published file, including documentation-only changes.
 4. Increment the `version` field in `apm.yml`.
 
 ## Validation
@@ -48,8 +48,8 @@ For the argument grammar, scope vocabulary, and mutation defaults that every use
 
 | Setting | When to use |
 |---------|-------------|
-| `user-invocable: true`, `disable-model-invocation: true` | User-only slash command, for scaffolding, dependency upgrades, placeholders, and any skill whose changes reach beyond the working tree or are hard to undo (for example `fulcro-new`, `fulcro-upgrade`). |
+| `user-invocable: true`, `disable-model-invocation: true` | User-only slash command, for scaffolding, dependency upgrades, and any skill whose changes reach beyond the working tree or are hard to undo (for example `fulcro-new`, `fulcro-upgrade`). |
 | `user-invocable: true`, no `disable-model-invocation` | Slash command the model can also run from a natural-language request, for a fixer whose edits stay in the working tree (for example `fulcro-fix`). Write the description as a trigger. |
 | `user-invocable: false` | Model-invoked from conversation context (for example `fulcro`, `fulcro-lenses`). |
 
-Every skill carries `agents/openai.yaml` whose `policy.allow_implicit_invocation` matches the table above (`true` for model-invoked, `false` for user-only). Skills in this package use the Fulcro teal brand color, `#009E9E`, so the runtimes can distinguish Fulcro-specific guidance from the host-neutral `clojure` baseline (Clojure logo blue, `#5881D8`), the ClojureScript-specific `clojurescript` skill (JavaScript yellow, `#F7DF1E`), the JVM `clojure-jvm` skill (Java orange, `#E76F00`), the Biff framework skill (Biff indigo, `#4338CA`), and the ClojureDart skill (Flutter blue, `#02569B`).
+Every skill carries `agents/openai.yaml` whose `policy.allow_implicit_invocation` matches the table above: `false` for a user-only skill and `true` for every skill the model can run. Skills in this package use the Fulcro teal brand color, `#009E9E`, so the runtimes can distinguish Fulcro-specific guidance from the host-neutral `clojure` baseline (Clojure logo blue, `#5881D8`), the ClojureScript-specific `clojurescript` skill (JavaScript yellow, `#F7DF1E`), the JVM `clojure-jvm` skill (Java orange, `#E76F00`), the Biff framework skill (Biff indigo, `#4338CA`), the Electric framework skill (Hyperfiddle lavender, `#B7A4C2`), and the ClojureDart skill (Flutter blue, `#02569B`).

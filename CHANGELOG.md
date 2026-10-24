@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.19] - 2026-10-24
+
+### Added
+
+- The Companion packages table lists [electric-skills](https://github.com/brackendev/electric-skills), the new companion package for the [Electric](https://github.com/hyperfiddle/electric) v3 full-stack framework, and `CONTRIBUTING.md` cites its Hyperfiddle lavender brand color (`#B7A4C2`).
+- The `fulcro` skill explains that a release build keeps Fulcro's Timbre log calls together with the absolute path of the Fulcro jar on the build machine, and its project workflows reference shows how to remove them at compile time: set `TAOENSSO_TIMBRE_MIN_LEVEL_EDN`, block the compiler cache for Timbre in release builds, and build in a fresh JVM.
+
+### Changed
+
+- The Companion packages table names the major version each framework package targets: Biff 2, Electric v3, and Fulcro 3. The skills in those packages do not apply to other major versions.
+- The README introduction names Fulcro 3.
+- When a project has no `:dry4clj` alias, `/fulcro-fix` reports the dry step as `SKIP` and shows the alias to add, instead of reporting `ERROR`.
+- `CONTRIBUTING.md` asks for a changelog entry and a version increment for every change to a published file, including documentation-only changes, which matches the release history. It asked for entries only for user-facing changes.
+- The `fulcro-lenses` description names the Fulcro namespaces and macros that trigger it, its layering, and the lenses it covers, without repeating the topic list from the skill body. Runtimes load every skill description on each request, so the shorter description costs less context.
+- `/fulcro-new` pins shadow-cljs 3.5.7, React 19.3.1, and ring-jetty-adapter 1.15.6, the releases current on 2026-10-24, and the `fulcro` project workflows reference matches them. A project generated from the skill passed its compile, test, release, formatting, and lint checks with these versions.
+
+### Removed
+
+- The `/fulcro-smells-fix` placeholder is removed. It only printed a not-implemented notice. Run `/clj-smells-fix` from clojure-skills for host-neutral smells in `.clj`, `.cljc`, and `.cljs` files.
+
+### Fixed
+
+- The `CONTRIBUTING.md` Layout table names the local `AGENTS.md`, `GEMINI.md`, and `TODO.md` files. It named `CLAUDE.md`, which the package does not use.
+- The README Requirements name the scaffolding command `/fulcro-new`. They named `/fulcro-skills:fulcro-new`, a plugin-style name that does not exist, because APM installs the package as skills with no package prefix.
+- `/fulcro-fix` reads source paths from `deps.edn` when `shadow-cljs.edn` sets `:deps`, because shadow-cljs then ignores its own `:source-paths`. The `/fulcro-new` scaffold sets `:deps`.
+- The README explains how Codex, OpenCode, and Gemini CLI offer the commands: Codex runs a skill as `$name` from its `/skills` list, OpenCode attaches one with `@name`, and Gemini CLI does not read the user-only setting. It said every command appears as a slash command and that user-only commands run only when typed.
+- `CONTRIBUTING.md` states that `agents/openai.yaml` sets `allow_implicit_invocation` to `true` for every skill the model can run, including slash commands that the model can also run. It named only model-invoked and user-only skills.
+
 ## [0.1.18] - 2026-10-24
 
 ### Fixed

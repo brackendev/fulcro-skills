@@ -54,7 +54,7 @@ File naming uses underscores; namespace declarations use hyphens. `src/main/app/
 
 ## `deps.edn`
 
-A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the usual dev / test / build aliases. The versions below were current on 2026-10-04 (Fulcro 3.10.0). Check [Clojars](https://clojars.org/) and Maven Central for newer releases before pinning.
+A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the usual dev / test / build aliases. The versions below were current on 2026-10-24 (Fulcro 3.10.0). Check [Clojars](https://clojars.org/) and Maven Central for newer releases before pinning.
 
 ```clojure
 {:paths ["src/main" "resources"]
@@ -65,14 +65,14 @@ A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the
          com.fulcrologic/guardrails  {:mvn/version "1.3.4"}
          com.wsscode/pathom3         {:mvn/version "2025.01.16-alpha"}
          metosin/muuntaja            {:mvn/version "0.6.12"}
-         ring/ring-jetty-adapter     {:mvn/version "1.15.5"}
+         ring/ring-jetty-adapter     {:mvn/version "1.15.6"}
          ring/ring-defaults          {:mvn/version "0.7.1"}
          com.cognitect/transit-clj   {:mvn/version "1.1.363"}
          ch.qos.logback/logback-classic {:mvn/version "1.6.5"}}
 
  :aliases
  {:dev   {:extra-paths ["src/dev" "src/test"]
-          :extra-deps  {thheller/shadow-cljs           {:mvn/version "3.5.4"}
+          :extra-deps  {thheller/shadow-cljs           {:mvn/version "3.5.7"}
                         com.fulcrologic/fulcro-inspect {:mvn/version "1.0.5"}
                         binaryage/devtools             {:mvn/version "1.0.7"}
                         org.clojure/tools.namespace    {:mvn/version "1.5.1"}}}
@@ -186,6 +186,28 @@ clj -T:build uber
 The advanced build surfaces externs-inference warnings; see the [`clojurescript`](https://github.com/brackendev/clojurescript-skills) skill for the externs workflow. Fulcro's own code is externs-clean; warnings typically come from npm libraries used through string requires.
 
 The uberjar wraps the server JAR with the compiled assets under `resources/public/js`. Deploy the uberjar to the target host and start it with `java -jar app.jar`.
+
+### Removing Fulcro's log calls from the release build
+
+Fulcro logs through [Timbre](https://github.com/taoensso/timbre). Each log call keeps its source location in a release build, so the bundle contains the absolute path of the Fulcro jar on the build machine, for example `jar:file:/Users/<name>/.m2/repository/com/fulcrologic/fulcro/<version>/fulcro-<version>.jar!/com/fulcrologic/fulcro/application.cljc`. Timbre removes every log call below a minimum level at compile time when the compiling JVM sees the `TAOENSSO_TIMBRE_MIN_LEVEL_EDN` environment variable or the `taoensso.timbre.min-level.edn` JVM property. The Fulcro Developer's Guide describes this under [Removing Debug Logging](https://book.fulcrologic.com/#_removing_debug_logging).
+
+1. **Choose the level.** `:report` removes Fulcro's warnings and errors along with its debug logging, and every embedded path with them. It also removes the application's own Timbre warnings and errors, so the production bundle logs nothing to the console through Timbre. `:warn` keeps warnings and errors, and the paths in those calls stay in the bundle.
+2. **Keep the release build out of the compiler cache.** shadow-cljs caches compiled namespaces, Fulcro's included, and a cached namespace keeps the log calls it was compiled with. Block caching for Timbre in release builds. A namespace that requires a blocked namespace is not cached either, so every Fulcro namespace that logs recompiles on each release build:
+
+   ```clojure
+   :builds
+   {:main {:target  :browser
+           ;; ...
+           :release {:build-options {:cache-blockers #{taoensso.timbre}}}}}
+   ```
+
+3. **Build in a fresh JVM.** Timbre reads the level once, when the compiler loads it. The shadow-cljs CLI sends commands to a running server, including one that `watch` started, and that server does not see a variable set in another terminal. Stop the server, then run:
+
+   ```bash
+   TAOENSSO_TIMBRE_MIN_LEVEL_EDN=:report npx shadow-cljs release main
+   ```
+
+Check the bundle with `grep -c "$HOME" resources/public/js/main.js`, which prints `0` when no path under the home directory remains.
 
 ## Pathom 3 Server Wiring
 

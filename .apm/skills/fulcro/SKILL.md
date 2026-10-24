@@ -448,6 +448,10 @@ Setting `:use-hooks? true` produces a function component. Standard React hook ru
 
 Fulcro 3.9 requires React 18 or later and removed rendering code that could not work with React's asynchronous rendering. The removed pieces are the `com.fulcrologic.fulcro.rendering.multiple-roots-renderer`, `ident-optimized-render`, and `keyframe-render2` namespaces, and the `hooks/use-fulcro-mount` function. An app that sets `:optimized-render!` to one of those renderers, or mounts components with `use-fulcro-mount`, fails to compile after the upgrade. Remove the `:optimized-render!` override so the default keyframe renderer applies, and replace floating roots with `hooks/use-component` or `hooks/use-root`. The `react.version18` helpers (`with-react18`, `react18-options`) are now deprecated no-ops and can be deleted.
 
+### Release builds keep Fulcro's log calls and their file paths
+
+Fulcro logs through Timbre, and each Timbre log call records the file it comes from. A `shadow-cljs release` build therefore keeps every Fulcro log call together with the absolute path of the Fulcro jar on the build machine (`jar:file:/<home>/.m2/repository/...`), which publishes the builder's home directory and enlarges the bundle. Timbre removes the calls below a minimum level at compile time when the compiling JVM sees `TAOENSSO_TIMBRE_MIN_LEVEL_EDN`. The compiler cache and a running shadow-cljs server both defeat the setting, so follow the steps under "Removing Fulcro's log calls from the release build" in `references/project-workflows.md`.
+
 ### `with-redefs` is unreliable across the wire
 
 Stubbing a server-side resolver from a client-side test does not work; they run in different processes. Reach for `fulcro-spec`'s component stubs on the client, and for ordinary `with-redefs` (JVM) or `with-redefs` + reload (CLJS) only within a single process.
