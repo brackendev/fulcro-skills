@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.22] - 2026-10-25
+
+### Added
+
+- The `fulcro` skill opens with Iron Laws (FUL-1 through FUL-5): numbered rules that prevent stale UIs, silent data loss, and security holes. The agent does not write code that breaks a law, and when existing code breaks one, it reports the law ID, the location, and the correct pattern, then asks before changing code outside the task. Key Rules that guarded against bugs or security holes moved into the laws, and the remaining Key Rules are renumbered.
+- The `fulcro` Pathom server reference covers securing the API: authentication in middleware, authorization in each resolver and mutation, and the Fulcro Developer's Guide's security chapter.
+
+### Fixed
+
+- The Pathom server reference attributes "You cannot trust a client" to the Fulcro Developer's Guide's "Full-Stack Error Handling" section, where it appears.
+
 ## [0.1.21] - 2026-10-25
 
 ### Changed

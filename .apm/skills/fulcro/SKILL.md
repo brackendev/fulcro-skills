@@ -38,32 +38,38 @@ For the deepest framework reference, [The Fulcro Developer's Guide](https://book
 
 This skill reflects Fulcro 3.10, which requires React 18 or later and is tested against React 19.
 
+## Iron Laws
+
+These rules prevent stale UIs, silent data loss, and security holes in Fulcro 3 applications. The `clojure`, `clojurescript`, and `clojure-jvm` skills' Iron Laws (CLJ, CLJS, and JVM) also apply. Never write code that breaks one. When existing code breaks a law, stop and report the law ID, the location, the offending code, and the correct pattern, then ask before changing code outside the current task. A law overrides any Key Rule or reference that seems to conflict with it.
+
+1. **FUL-1: CHANGE APP STATE ONLY THROUGH FULCRO TRANSACTIONS.** The Fulcro Developer's Guide: tweaking the database atom directly "side-steps all of the internals of Fulcro including UI refresh," and Fulcro does not watch the atom. Change state with `defmutation` (through `comp/transact!`), `df/load!`, `m/set-value!`, `uism/trigger!`, or `dr/change-route!`. Server push and timers use `merge/merge-component!`. A custom `result-action` must call `m/default-result-action!`, or return values, tempid resolution, and the ok and error actions stop working (`references/mutations-and-loading.md`).
+2. **FUL-2: COMPOSE JOINS WITH `comp/get-query` AND CONSISTENT IDENTS.** The guide: "Joins should always use get-query to get the next component in the graph," because the metadata it adds is what lets normalization work. A query written by hand silently skips normalization. Give every entity of one type the same ident shape, `[:person/id id]`, across query, ident, and initial state, and use `[:component/id ::Component]` for singletons (`references/components.md`).
+3. **FUL-3: COMPOSE CHILD INITIAL STATE INTO EVERY PARENT.** A component whose initial state is not composed up through its parents never enters the client database, and Fulcro warns that its "props ... will be nil." Use `(comp/get-initial-state Child params)` in the parent's `:initial-state` all the way to the root, or load the data before showing the component (`references/components.md`).
+4. **FUL-4: SEND ONLY TRANSIT-ENCODABLE DATA OVER THE NETWORK.** Fulcro uses transit between client and server, so mutation parameters, load parameters, and responses hold plain Clojure data. For a custom type, register a handler with `transit/install-type-handler!` as early as possible, and prefer `deftype` over `defrecord`, which Fulcro can mistake for a map (`references/mutations-and-loading.md`).
+5. **FUL-5: AUTHORIZE EVERY RESOLVER AND MUTATION ON THE SERVER.** Any client can send any EQL query or mutation to the API. The guide: "You cannot trust a client." Put the authenticated user into the Pathom environment in middleware, where a query cannot override it, and check authorization in each resolver and mutation that touches protected data. Never rely on what the UI shows or hides (`references/pathom-server.md`).
+
 ## Key Rules
 
 1. **Define components with `defsc`.** Co-locate `:query`, `:ident`, `:initial-state`, and the render body. Do not split these across multiple forms; they describe one component. Fulcro 3 has no `defui` macro, so rewrite Fulcro 2.x `defui` components with `defsc`.
-2. **Idents are two-tuples `[:table/id value]`.** Use the same `:table/id` keyword for every entity of that type, across query, ident, and initial-state. Singletons use `[:component/id ::ComponentName]`. Ident hygiene is the most common source of silent denormalization.
-3. **Compose child queries and child initial-state through the framework helpers.** `(comp/get-query ChildComponent)` and `(comp/get-initial-state ChildComponent params)` rather than inlining either by hand. This is what lets refactors of a child propagate without breaking parent composition.
-4. **Mutate state only through `defmutation`.** Never `swap!` the state atom from UI code. Place optimistic state in `action`, server work in `remote`, response handling in `ok-action` / `error-action` / `result-action`.
-5. **Pass parent-derived data and callbacks through `(comp/computed props {...})`, and keep the callbacks stable.** Fulcro keeps computed props when a targeted update refreshes a child that has a query and an ident from the database. A callback passed in ordinary props is lost on that update. A closure built inline in render, such as `(ui-person (comp/computed person {:on-click (fn [] (delete! this))}))`, is a new function on every parent render, so the child's props never compare equal and the child re-renders every time. Lift the callback into a top-level function that receives the component.
-6. **Load data with `df/load!` and `df/load-field!`.** Use `:target`, `:post-mutation`, and `:marker` rather than wrapping `load!` in custom helpers or hand-merging server responses into the state atom.
-7. **Route with dynamic routers.** `defrouter` + `dr/change-route!` from `com.fulcrologic.fulcro.routing.dynamic-routing`. Legacy union routers (the `defrouter` form from the Fulcro 2.x era, available in Fulcro 3 as `defsc-router` in `com.fulcrologic.fulcro.routing.legacy-ui-routers`) are legacy. Upstream still supports them but advises against them in new applications, so do not reach for them in new code.
-8. **Manage form state through `fs/add-form-config*` and `fs/*` helpers.** Track dirty / pristine, validation, and submission with the form-state algorithms rather than ad-hoc component-local state.
-9. **Pathom 3 resolvers live in `com.wsscode.pathom3.*` and use `(pco/defresolver ...)`.** Mirror client mutation symbols on the server so EQL flows symmetrically through the API.
-10. **Keep transit-serializable values on the wire.** Mutation parameters, load parameters, and EQL responses hold only plain Clojure data (maps, vectors, sets, lists, keywords, strings, numbers, booleans, nil, UUIDs, dates). Atoms, channels, refs, functions, and most deftypes throw or silently drop fields when encoded to transit. Pathom returns Clojure data, and Fulcro merges it into the normalized DB.
-11. **Reach for UI State Machines (`com.fulcrologic.fulcro.ui-state-machines`) when a flow needs explicit states.** Login flows, multi-step forms, network retry loops, and complex routing transitions belong in a UISM rather than scattered across mutations.
+2. **Pass parent-derived data and callbacks through `(comp/computed props {...})`, and keep the callbacks stable.** Fulcro keeps computed props when a targeted update refreshes a child that has a query and an ident from the database. A callback passed in ordinary props is lost on that update. A closure built inline in render, such as `(ui-person (comp/computed person {:on-click (fn [] (delete! this))}))`, is a new function on every parent render, so the child's props never compare equal and the child re-renders every time. Lift the callback into a top-level function that receives the component.
+3. **Load data with `df/load!` and `df/load-field!`.** Use `:target`, `:post-mutation`, and `:marker` rather than wrapping `load!` in custom helpers or hand-merging server responses into the state atom.
+4. **Route with dynamic routers.** `defrouter` + `dr/change-route!` from `com.fulcrologic.fulcro.routing.dynamic-routing`. Legacy union routers (the `defrouter` form from the Fulcro 2.x era, available in Fulcro 3 as `defsc-router` in `com.fulcrologic.fulcro.routing.legacy-ui-routers`) are legacy. Upstream still supports them but advises against them in new applications, so do not reach for them in new code.
+5. **Manage form state through `fs/add-form-config*` and `fs/*` helpers.** Track dirty / pristine, validation, and submission with the form-state algorithms rather than ad-hoc component-local state.
+6. **Pathom 3 resolvers live in `com.wsscode.pathom3.*` and use `(pco/defresolver ...)`.** Mirror client mutation symbols on the server so EQL flows symmetrically through the API.
+7. **Reach for UI State Machines (`com.fulcrologic.fulcro.ui-state-machines`) when a flow needs explicit states.** Login flows, multi-step forms, network retry loops, and complex routing transitions belong in a UISM rather than scattered across mutations.
 
 ## References
 
-The Key Rules are the short form. Each reference file below holds the detailed guidance and the examples for one topic. Before writing, reviewing, or refactoring Fulcro code, read every reference whose topic the task touches, and read the next one when the work moves to a new topic.
+The Iron Laws and Key Rules are the short form. Each reference file below holds the detailed guidance and the examples for one topic. Before writing, reviewing, or refactoring Fulcro code, read every reference whose topic the task touches, and read the next one when the work moves to a new topic.
 
 | When the task involves | Read |
 |------------------------|------|
-| Writing or changing a `defsc` component, its query, ident, or initial state, normalization, or EQL queries | `references/components.md` |
-| Mutations and their `action`, `remote`, `ok-action`, and `error-action` sections, or loading data with `df/load!` and load targeting | `references/mutations-and-loading.md` |
+| Writing or changing a `defsc` component, its query, ident, or initial state, query and initial-state composition, normalization, or EQL queries | `references/components.md` |
+| Mutations and their `action`, `remote`, `ok-action`, `error-action`, and `result-action` sections, changing app state, custom transit types, or loading data with `df/load!` and load targeting | `references/mutations-and-loading.md` |
 | Dynamic routing with `defrouter` and `dr/change-route!` | `references/routing.md` |
 | Forms with `fs/*` form state or Fulcro RAD form options | `references/forms.md` |
 | UI state machines (`uism/*`) | `references/state-machines.md` |
-| Pathom 3 resolvers and the server parser | `references/pathom-server.md` |
+| Pathom 3 resolvers, the server parser, or securing the API | `references/pathom-server.md` |
 | Fulcro Inspect setup or debugging with Inspect | `references/inspect.md` |
 | Project layout, `deps.edn` and `shadow-cljs.edn`, builds, the server, or the development workflow | `references/project-workflows.md` |
 
