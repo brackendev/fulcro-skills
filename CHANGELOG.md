@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.21] - 2026-10-25
+
+### Changed
+
+- The `fulcro` skill loads a short entry file that keeps the Key Rules and routes each task to a reference file: components and queries, mutations and loading, routing, forms, UI state machines, the Pathom server, and Fulcro Inspect. The detailed guidance moved into those files without changes, so less text loads on every matching task and the agent reads the detail for the topic at hand.
+
 ## [0.1.20] - 2026-10-25
 
 ### Changed
