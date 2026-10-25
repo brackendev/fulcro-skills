@@ -84,8 +84,8 @@ A skill is classified by its actual behavior, not by its name. If the name and b
 
 | Skill                   | Class           | `--report` available? | Notes |
 |-------------------------|-----------------|------------------------|-------|
-| `/fulcro-fix`          | Mutating        | Yes                    | `format` step runs `cljfmt fix` by default. `--report` swaps it for `cljfmt check`. `lint`, `test`, `advanced`, and `dry` are pure-read of source regardless. The `advanced` step writes the shadow-cljs release output under `resources/public/js/` (build artifact, not source). |
-| `/fulcro-upgrade`       | Mutating        | Yes                    | Rewrites `:mvn/version` for the Fulcro artifacts in `deps.edn`. `--report` prints the current and remote versions without writing. |
+| `/fulcro-fix`          | Mutating        | Yes                    | `format` step runs `cljfmt fix` by default, through the first cljfmt runner the project supports. `--report` replaces it with `cljfmt check`. `lint`, `test`, `advanced`, and `dry` are pure-read of source regardless. The `advanced` step writes the shadow-cljs release output under `resources/public/js/` (build artifact, not source). |
+| `/fulcro-upgrade`       | Mutating        | Yes                    | Rewrites `:mvn/version` for the Fulcro artifacts in `deps.edn`, including both `fulcrologic/fulcro-spec` entries, after reading the upstream changes. `--report` prints the current and latest stable versions and the changes that affect the project without writing. |
 
 The model-only reference skills (`fulcro`, `fulcro-lenses`) have no argument surface and are not classified here.
 
@@ -107,6 +107,7 @@ The section name `## Customization` is retired.
 /fulcro-fix                       # all five steps; format writes
 /fulcro-fix lint                  # lint only (pure-read; no source writes)
 /fulcro-fix format                # format step; writes via cljfmt fix
+/fulcro-fix format src/main/app    # format step on src/main/app only
 /fulcro-fix lint test             # combined step keywords
 /fulcro-fix --report              # all five steps; format reads via cljfmt check
 /fulcro-fix format --report       # format step; no source writes
@@ -118,12 +119,12 @@ The skill writes source when the `format` step runs without `--report`. With `--
 ### `/fulcro-upgrade` -- mutating skill with `--report`
 
 ```
-/fulcro-upgrade                    # bump deps.edn :mvn/version for Fulcro and run compile + tests
-/fulcro-upgrade --report           # print current and latest versions; no writes
+/fulcro-upgrade                    # update deps.edn :mvn/version for Fulcro and run compile + tests
+/fulcro-upgrade --report           # print versions and the changes that affect the project; no writes
 /fulcro-upgrade all                # synonym for (no argument)
 ```
 
-The default rewrites `:mvn/version` for `com.fulcrologic/fulcro` (and `fulcro-rad`, `guardrails`, and `fulcro-inspect` when present) in `deps.edn`, then runs `clj -P`, the compile, and the test suites. With `--report`, the skill prints the current and latest versions for each artifact found in `deps.edn` and surfaces the upstream commit history between release tags for minor and major version jumps. No writes. No compile. No tests.
+Both modes compare each artifact found in `deps.edn` with its latest stable version, skip an artifact that is already current or newer, and read the upstream changelog entries and the commit history between release tags for every artifact that changes. The default then rewrites `:mvn/version` for `com.fulcrologic/fulcro` (and `fulcro-rad`, `guardrails`, `fulcro-inspect`, and every `fulcrologic/fulcro-spec` entry when present) in `deps.edn`, and runs `clojure -P`, the compile, and the test suites. With `--report`, the skill prints the current and latest versions and a `Changes:` line that lists the changes that affect the project, with file matches, or says that none were found. It writes nothing to the project and runs no compile and no tests.
 
 ## Exemptions
 
@@ -139,7 +140,7 @@ No skill in this plugin claims an exemption today. The standard exemption patter
 
 **Step keywords versus scope keywords.** A skill like `/fulcro-fix` accepts step keywords (`lint`, `format`, `test`, `advanced`, `dry`) that select work to run, and scope keywords (`all`) that widen scope. Step keywords are skill-specific and listed in the skill's own table. Scope keywords are shared and listed here. When a skill has both, the `## Arguments` table lists both with clearly distinct rows.
 
-**Tool-level flags the skill calls internally.** A skill may invoke a tool that itself uses POSIX flags (for example, `clj-kondo --lint`, `cljfmt fix`, `cljfmt check`, `shadow-cljs release`, `karma start --single-run`, `clj -P`, `curl -sSL`). Those are tool-level flags, not skill flags, and do not count against rule 1. The skill body should disambiguate when a tool flag could be mistaken for a skill flag.
+**Tool-level flags the skill calls internally.** A skill may invoke a tool that itself uses POSIX flags (for example, `clj-kondo --lint`, `cljfmt fix`, `cljfmt check`, `shadow-cljs release`, `karma start --single-run`, `clojure -P`, `curl -sSL`). Those are tool-level flags, not skill flags, and do not count against rule 1. The skill body should disambiguate when a tool flag could be mistaken for a skill flag.
 
 ## Author checklist
 

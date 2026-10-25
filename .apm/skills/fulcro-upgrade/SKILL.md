@@ -1,6 +1,6 @@
 ---
 name: fulcro-upgrade
-description: "Upgrade the Fulcro dependency in deps.edn to the latest released version and verify the project compiles and tests pass"
+description: "Upgrade the Fulcro dependencies in deps.edn to the latest stable versions, list the upstream changes that affect the project, and verify the project compiles and tests pass"
 argument-hint: "[--report] [all]"
 user-invocable: true
 disable-model-invocation: true
@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 # Upgrade Fulcro
 
-Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest released version on Clojars and verify the project still compiles and passes tests. Also upgrades `com.fulcrologic/fulcro-rad`, `com.fulcrologic/guardrails`, and `com.fulcrologic/fulcro-inspect` in the same pass when the project declares them. ClojureScript itself is upgraded by `/cljs-upgrade` in clojurescript-skills, not by this skill.
+Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest stable version on Clojars, read the upstream changes between the project's version and that version, and verify the project still compiles and passes tests. Also upgrades `com.fulcrologic/fulcro-rad`, `com.fulcrologic/guardrails`, `com.fulcrologic/fulcro-inspect`, and `fulcrologic/fulcro-spec` in the same pass when the project declares them. fulcro-spec's Clojars group is `fulcrologic`, not `com.fulcrologic`. ClojureScript itself is upgraded by `/cljs-upgrade` in clojurescript-skills, not by this skill.
 
 The argument grammar follows `CONVENTIONS.md` in the fulcro-skills source repository. The table below is complete for this skill.
 
@@ -16,15 +16,15 @@ The argument grammar follows `CONVENTIONS.md` in the fulcro-skills source reposi
 
 | Input         | Target                                                                       |
 |---------------|------------------------------------------------------------------------------|
-| (no argument) | Update `:mvn/version` for `com.fulcrologic/fulcro` (and `fulcro-rad`, `guardrails`, `fulcro-inspect` if present) in `deps.edn`, then refresh dependencies, compile, and run tests |
+| (no argument) | Read the upstream changes, then update `:mvn/version` for `com.fulcrologic/fulcro` (and `fulcro-rad`, `guardrails`, `fulcro-inspect`, and `fulcrologic/fulcro-spec` if present) in `deps.edn`, refresh dependencies, compile, and run tests |
 | `all`         | Same as (no argument); accepted for family consistency                       |
-| `--report`    | Print the current and latest released versions for each Fulcro artifact found in `deps.edn`. Surface the upstream release history for minor and major version jumps. No writes, no compile, no tests |
+| `--report`    | Print the current and latest stable versions for each Fulcro artifact found in `deps.edn` and the upstream changes between them that affect the project. No writes, no compile, no tests |
 
 The skill rewrites version strings in a single `deps.edn`. `<path>` rows are not part of the standard scope vocabulary for this skill because the target is fixed.
 
 ## Mutation
 
-Mutates `deps.edn` by default, replacing the `:mvn/version` value for `com.fulcrologic/fulcro`, and for `com.fulcrologic/fulcro-rad`, `com.fulcrologic/guardrails`, and `com.fulcrologic/fulcro-inspect` when present. Refreshes dependencies with `clj -P`, compiles the ClojureScript client with `npx shadow-cljs compile main`, runs the test suites, and refreshes clj-kondo imports. On compile or test failure, the skill reverts every version change in `deps.edn` to the recorded original values. With `--report`, the skill writes nothing and runs no compile or tests.
+Mutates `deps.edn` by default, replacing the `:mvn/version` value for `com.fulcrologic/fulcro`, and for `com.fulcrologic/fulcro-rad`, `com.fulcrologic/guardrails`, `com.fulcrologic/fulcro-inspect`, and every `fulcrologic/fulcro-spec` entry when present. The project workflows layout declares fulcro-spec twice, in the `:dev` and `:test` aliases, and the skill updates and reverts both together. It then refreshes dependencies with `clojure -P`, compiles the ClojureScript client with `npx shadow-cljs compile main`, runs the test suites, and refreshes clj-kondo imports. On a dependency, compile, or test failure, the skill restores the saved copy of `deps.edn`, which reverts every version change. With `--report`, the skill writes nothing in the project and runs no compile or tests. It still clones the upstream repositories into a temporary directory to read their commit history.
 
 ## Prerequisites
 
@@ -42,61 +42,96 @@ Read `deps.edn` and note the current `:mvn/version` value for each of:
 - `com.fulcrologic/fulcro-rad` (if present)
 - `com.fulcrologic/guardrails` (if present)
 - `com.fulcrologic/fulcro-inspect` (if present, usually in the `:dev` alias)
-- `com.wsscode/pathom3` (if present). Report its version but do not update it unless the user explicitly asks, because Pathom 3 is on an alpha track and its releases occasionally include breaking changes.
+- `fulcrologic/fulcro-spec` (if present). Record every occurrence and its alias. In the project workflows layout it appears in the `:dev` alias, which the shadow-cljs client test builds read, and in the `:test` alias, which Kaocha runs. When the occurrences hold different versions, report both and ask the user which one to treat as current.
+- `com.wsscode/pathom3` (if present). Report its version but do not update it unless the user explicitly asks. Pathom 3 publishes only alpha releases, and its `CHANGELOG.md` marks breaking changes in them with "BREAKING". When the user asks, read the entries newer than the project's version in `https://raw.githubusercontent.com/wilkerlucio/pathom3/main/CHANGELOG.md` and apply step 4's search rules and step 5's confirmation rules to them.
 
-### 2. Fetch the Latest Released Versions
+Unless `--report` is present, save a copy of the full file so that a later step can restore it:
 
-Query Clojars for each `com.fulcrologic/*` artifact found above:
+```bash
+cp deps.edn "${TMPDIR:-/tmp}/deps.edn.fulcro-upgrade"
+```
+
+### 2. Fetch the Latest Stable Versions
+
+Query Clojars for each artifact found above. The group is part of the URL: `com.fulcrologic` for `fulcro`, `fulcro-rad`, `guardrails`, and `fulcro-inspect`, and `fulcrologic` for `fulcro-spec`. `https://clojars.org/api/artifacts/com.fulcrologic/fulcro-spec` returns 404.
 
 ```bash
 curl -sSL -A 'Mozilla/5.0' \
-  'https://clojars.org/api/artifacts/com.fulcrologic/fulcro' \
-  | python3 -c "import json,sys; print(json.load(sys.stdin)['latest_release'])"
+  'https://clojars.org/api/artifacts/<group>/<artifact>' \
+  | python3 -c "import json,re,sys; d=json.load(sys.stdin); s=[v['version'] for v in d['recent_versions'] if not re.search('[A-Za-z]', v['version'])]; print('latest_release:', d['latest_release']); print('newest stable:', max(s, key=lambda v: [int(n) for n in re.findall(r'[0-9]+', v)]) if s else None)"
 ```
 
-Repeat for `fulcro-rad`, `guardrails`, and `fulcro-inspect` only if they are in `deps.edn`.
+Upgrade only to the `newest stable` version, the highest version whose string contains no letters. `latest_release` never names a `-SNAPSHOT` build, but it can name a release candidate: Fulcro published `3.10.0-RC1` through `3.10.0-RC3` on Clojars before `3.10.0`. `recent_versions` also lists `-SNAPSHOT` builds (fulcro-spec lists `3.2.9-SNAPSHOT`) and older prereleases such as `3.9.0-rc14`, and the command skips them all. When the two lines differ, report both. When `newest stable` is `None`, ask the user.
 
 If a network call fails, ask the user for the target versions rather than guessing. Do not invent a version number.
 
-If `--report` is present, print the previous and latest versions for each artifact found and stop without writing `deps.edn`, refreshing dependencies, or running the compile and tests:
+### 3. Compare Versions
 
-```
-Fulcro upgrade report:
-  com.fulcrologic/fulcro:       <current> -> <latest>
-  com.fulcrologic/fulcro-rad:   <current> -> <latest>   (or "not present")
-  com.fulcrologic/guardrails:   <current> -> <latest>   (or "not present")
-  com.fulcrologic/fulcro-inspect: <current> -> <latest> (or "not present")
-  com.wsscode/pathom3:          <current> (informational only)
-```
+Run these checks with and without `--report`. Compare versions by their numeric parts, not as strings (`3.9.5` is older than `3.10.0`). When the numeric parts are equal, the stable version is newer than a `-RC`, `-alpha`, `-beta`, or `-SNAPSHOT` version.
 
-When the `com.fulcrologic/fulcro` minor or major version changes, also print the release history described in step 3 and the migration checks under Gotchas that apply to the range. Do not auto-apply or write.
+- **Already at the latest stable version.** When the current version equals the latest stable version, report "already at the latest stable version" for that artifact and leave it out of the remaining steps.
+- **No downgrade.** When the current version is newer than the latest stable version (for example, a SNAPSHOT or release candidate of a later version), report "newer than the latest stable release <latest>, not changed" and leave it out of the remaining steps. Never lower a version.
 
-### 3. Compare and Update
+When no artifact remains, print the report from step 4 with "none found" on the Changes line and stop.
 
-For each artifact, if the latest version matches the current version, report "Already at the latest version" and skip. Otherwise, update the `:mvn/version` value in `deps.edn` to the latest version. Preserve formatting and surrounding content.
+### 4. Read the Upstream Changes
 
-Fulcro ships breaking changes in minor releases (3.9 removed renderers and required React 18 or later). Read the commit history between release tags for every minor or major jump, because the upstream `CHANGELOG.md` stops at 3.7.2 and is not maintained. Fulcro tags releases as `fulcro-<version>`:
+Fulcro releases breaking changes in minor versions, so read what changed between the project's version and the latest stable version at run time instead of relying on remembered migration notes. Read the changes for every remaining artifact before printing the `--report` output and before writing `deps.edn`. Fulcrologic records its changes in two places, and neither is complete:
+
+- **`CHANGELOG.md` at the latest release tag.** In `fulcro` and `fulcro-rad` the file opens with "See git commit history for further change log entries. This file is often not updated." In `fulcro-inspect`, `guardrails`, and `fulcro-spec` its newest entries are older than the current releases. Print every entry for a version newer than the project's version. When the newest entry is older than the project's version, report that the changelog has no entries for the range.
+- **The commit history between release tags.** Fulcrologic publishes no GitHub releases. Each repository tags its releases as `<repository>-<version>`: `fulcro-3.10.0` in `fulcrologic/fulcro`, `fulcro-inspect-1.0.5` in `fulcrologic/fulcro-inspect`, `guardrails-1.3.4` in `fulcrologic/guardrails`, `fulcro-rad-1.6.24` in `fulcrologic/fulcro-rad`, and `fulcro-spec-3.2.11` in `fulcrologic/fulcro-spec`. fulcro-spec uses that form from `fulcro-spec-3.1.6` on, and its tags for 3.1.5 and older are the bare version (`3.1.5`).
+
+Fetch both for each artifact that changes, replacing `<repo>` with the repository name (`fulcro`, `fulcro-inspect`, `guardrails`, `fulcro-rad`, `fulcro-spec`):
 
 ```bash
+curl -sSL "https://raw.githubusercontent.com/fulcrologic/<repo>/<repo>-<latest>/CHANGELOG.md"
+
 tmp="$(mktemp -d)"
-git clone --quiet --filter=blob:none https://github.com/fulcrologic/fulcro.git "$tmp/fulcro"
-git -C "$tmp/fulcro" log --no-merges --format='%cs %s' 'fulcro-<current>..fulcro-<latest>' \
+git clone --quiet --filter=blob:none "https://github.com/fulcrologic/<repo>.git" "$tmp/<repo>"
+git -C "$tmp/<repo>" log --no-merges --format='%cs %s' '<repo>-<current>..<repo>-<latest>' \
   | grep -v 'maven-release-plugin'
 ```
 
-If either tag is missing (for example, the project pins a snapshot), list the tags with `git -C "$tmp/fulcro" tag --sort=-creatordate` and ask the user which range to use.
+If either tag is missing (for example, the project pins a SNAPSHOT build, which has no tag), list the tags with `git -C "$tmp/<repo>" tag --sort=-creatordate` and ask the user which range to use.
 
-When the minor or major version changes, show this history and the applicable Gotchas migration checks, and ask the user whether to proceed before writing the new version into `deps.edn`. Treat any commit subject that contains "BREAKING" as requiring explicit confirmation. Patch-level updates within the same minor version proceed without asking.
+Find what the changes require. For every changelog entry or commit subject that names a breaking change, a removed or renamed namespace, function, macro, or option, a new requirement (such as a React or Java version), or a changed default, search the project for the names it mentions (the source and test directories, `shadow-cljs.edn`, `deps.edn`, and `package.json`) and list the matches with file and line. When a commit subject is too terse to tell what changed, read that commit with `git -C "$tmp/<repo>" show --stat <sha>` before deciding. Collect the entries that affect the project, with their matches, for the Changes line.
 
-### 4. Refresh Dependencies
+If `--report` is present, print the report and stop without writing `deps.edn`, refreshing dependencies, or running the compile and tests:
 
-```bash
-clj -P
+```
+Fulcro upgrade report:
+  com.fulcrologic/fulcro:         <current> -> <latest>
+  com.fulcrologic/fulcro-rad:     <current> -> <latest>   (or "not present")
+  com.fulcrologic/guardrails:     <current> -> <latest>   (or "not present")
+  com.fulcrologic/fulcro-inspect: <current> -> <latest>   (or "not present")
+  fulcrologic/fulcro-spec:        <current> -> <latest>   (or "not present")
+  com.wsscode/pathom3:            <current>               (informational only)
+  Changes: <each change that affects the project, with its artifact, source, and file matches, or "none found">
 ```
 
-If the dependency resolution fails, revert the `:mvn/version` in `deps.edn` to the original value, report the error, and stop.
+For an artifact that step 3 left out, print its current version followed by "(already at the latest stable version)" or "(newer than the latest stable release <latest>, not changed)" instead of an arrow.
 
-### 5. Compile and Test
+### 5. Confirm and Update
+
+When the minor or major version of an artifact changes, show the changes and the project matches from step 4, and ask the user whether to proceed before writing the new version into `deps.edn`. Treat any entry or commit subject that contains "BREAKING" as requiring explicit confirmation. Patch-level updates within the same minor version proceed without asking, but still report any matches. Report the edits that the matches call for outside `deps.edn` and ask before making them.
+
+Then update the `:mvn/version` value in `deps.edn` for each remaining artifact, including every `fulcrologic/fulcro-spec` occurrence. Preserve formatting and surrounding content.
+
+### 6. Refresh Dependencies
+
+Download the new versions, naming every alias that declares an upgraded artifact (`:dev` and `:test` in the project workflows layout):
+
+```bash
+clojure -P -M:dev:test
+```
+
+Use plain `clojure -P` when every upgraded artifact is in the top-level `:deps`. If dependency resolution fails, restore the saved file over `deps.edn`, report the error, and stop:
+
+```bash
+cp "${TMPDIR:-/tmp}/deps.edn.fulcro-upgrade" deps.edn
+```
+
+### 7. Compile and Test
 
 Run the ClojureScript build (development compile is enough as a sanity check; the `/fulcro-fix advanced` step covers the production build separately):
 
@@ -107,40 +142,42 @@ npx shadow-cljs compile main
 Then run the test suites:
 
 ```bash
-clj -M:test
+clojure -M:test
 npx shadow-cljs compile ci && npx karma start --single-run
 ```
 
-If `karma` is not configured, fall back to `npx shadow-cljs compile test && node target/test.js`. If neither test runner is configured, skip the client test and record `test (client): SKIPPED`.
+Run the Karma line only when `shadow-cljs.edn` has a `:target :karma` build (`:ci` in the project workflows layout) and the project has a `karma.conf.js`. When it has a `:target :node-test` build instead, run `npx shadow-cljs compile <build> && node <output-to>`, using the build's `:output-to`. If neither is configured, skip the client test and record `test (client): SKIPPED`.
 
-If compilation or any test suite fails, revert the version changes in `deps.edn`, restore the original state, report the error, and stop.
+If compilation or any test suite fails, restore the saved file over `deps.edn` with the command in step 6, report the error together with any change from step 4 that explains it, and stop.
 
-### 6. Refresh clj-kondo Imports
+### 8. Refresh clj-kondo Imports
 
 Fulcro's clj-kondo exports may have changed across the upgrade:
 
 ```bash
-clj-kondo --copy-configs --dependencies --lint "$(clj -A:dev -Spath)"
+clj-kondo --copy-configs --dependencies --lint "$(clojure -A:dev -Spath)"
 ```
 
-clj-kondo copies configurations only into an existing `.clj-kondo/` directory. When the project has none, skip this step and report `clj-kondo imports: skipped (no .clj-kondo/ directory)`.
+clj-kondo copies configurations only into an existing `.clj-kondo/` directory. When the project has none, skip this step and report `clj-kondo imports: SKIPPED (no .clj-kondo/ directory)`.
 
-### 7. Report
+### 9. Report
 
 Print a summary:
 
 ```
 Fulcro upgraded:
-  com.fulcrologic/fulcro:       <old> -> <new>
-  com.fulcrologic/fulcro-rad:   <old> -> <new>   (or "not present")
-  com.fulcrologic/guardrails:   <old> -> <new>   (or "not present")
-  com.fulcrologic/fulcro-inspect: <old> -> <new> (or "not present")
-  com.wsscode/pathom3:          <unchanged>      (informational only)
+  com.fulcrologic/fulcro:         <old> -> <new>
+  com.fulcrologic/fulcro-rad:     <old> -> <new>   (or "not present")
+  com.fulcrologic/guardrails:     <old> -> <new>   (or "not present")
+  com.fulcrologic/fulcro-inspect: <old> -> <new>   (or "not present")
+  fulcrologic/fulcro-spec:        <old> -> <new>   (or "not present")
+  com.wsscode/pathom3:            <unchanged>      (informational only)
+  Changes: <each change from step 4 that affects the project, with its file matches, or "none found">
 
   Compile:           PASS
   Tests (server):    PASS
   Tests (client):    PASS / SKIPPED
-  clj-kondo imports: refreshed
+  clj-kondo imports: refreshed / SKIPPED
 
 Recommended next steps:
   /fulcro-fix advanced    # Production-build sanity check with externs inference
@@ -148,13 +185,14 @@ Recommended next steps:
   Re-run any forms / load flows that exercise Fulcro internals
 ```
 
+For an artifact that step 3 left out, print the same note as in the `--report` output.
+
 ## Gotchas
 
-- **Clojars `latest_release` includes snapshots when no stable release exists.** For long-lived stable channels this is fine; for new ecosystem packages the latest may be a snapshot. Confirm with the user before applying a snapshot version.
-- **Crossing 3.8 changes the Fulcro Inspect setup.** From 3.8 on, `com.fulcrologic.fulcro.inspect.preload` only logs "Inspect NOT installed". Search `shadow-cljs.edn` for it. The migration adds `com.fulcrologic/fulcro-inspect` to the development alias, replaces the preload with `com.fulcrologic.devtools.chrome-preload` (or `electron-preload`), calls `(ido (it/add-fulcro-inspect! app))` at client startup, and installs the new Chrome extension or Electron app from the fulcro-inspect releases page. The `fulcro` skill's Fulcro Inspect section shows the full setup. Report the needed change and ask before editing files other than `deps.edn`.
-- **Crossing 3.9 requires React 18 or later and removes renderers.** Check `package.json` for `react` and `react-dom` 18 or later (Fulcro 3.10 is tested with React 19). Search the source for `multiple-roots-renderer`, `ident-optimized-render`, `keyframe-render2`, and `use-fulcro-mount`. Those namespaces and that function were removed, so any match fails to compile. Report the matches before applying the upgrade.
-- **Crossing 3.10 rejects misplaced `defsc` docstrings.** A docstring placed after the argument list now fails compilation with "Docstring is in the wrong position". Move it before the argument list.
+- **Clojars `latest_release` skips SNAPSHOT builds but not release candidates.** Clojars excludes versions ending in `-SNAPSHOT` from `latest_release` and returns `null` when an artifact has only SNAPSHOT builds. A release candidate still counts, so apply the stable-version rule in step 2. Pathom 3 is the exception: it publishes only alpha releases, so its newest alpha is the latest release.
+- **fulcro-spec's group is `fulcrologic`.** `com.fulcrologic/fulcro-spec` does not exist on Clojars, so a Clojars query with that group returns 404 and a `deps.edn` entry with it fails `clojure -P` with "Could not find artifact com.fulcrologic:fulcro-spec". Report such an entry instead of rewriting its version.
+- **Check the React and Inspect setup against the `fulcro` skill after the upgrade.** Compare `package.json`'s `react` and `react-dom` with the React requirement the `fulcro` skill states, and compare the `shadow-cljs.edn` preloads and the client startup call with its Fulcro Inspect reference. Report any difference and ask before editing files other than `deps.edn`.
 - **`shadow-cljs compile main` requires `node` and `npm` on `PATH`.** If either is missing, the compile step cannot run; report the missing prerequisite and stop.
-- **Some projects pin Fulcro via a Git SHA** (`{:git/url "https://github.com/fulcrologic/fulcro" :sha "..."}`) rather than `:mvn/version`. This skill only handles the `:mvn/version` path; if a Git dependency is present, stop and tell the user.
-- **Fulcro RAD couples loosely to Fulcro core but tightly to its own minor versions.** When bumping RAD across a major boundary, also check `com.fulcrologic/rad-*` companion libraries (`rad-datomic`, `rad-sql`, `rad-semantic-ui`) for compatible releases.
+- **Some projects pin Fulcro via Git** (`{:git/url "https://github.com/fulcrologic/fulcro" :git/tag "fulcro-<version>" :git/sha "..."}`) rather than `:mvn/version`. This skill only handles the `:mvn/version` path; if a Git dependency is present, stop and tell the user.
+- **Fulcro RAD's companion libraries release separately.** When the project declares `com.fulcrologic/fulcro-rad-datomic`, `com.fulcrologic/fulcro-rad-sql`, or `com.fulcrologic/fulcro-rad-semantic-ui`, report their current and latest versions next to `fulcro-rad` so the user can update them together. This skill does not rewrite them.
 - **clj-kondo imports occasionally break across upgrades.** If the lint step floods after the refresh, delete `.clj-kondo/.cache/` and `.clj-kondo/imports/` and re-run `clj-kondo --copy-configs --dependencies`.

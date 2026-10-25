@@ -6,6 +6,56 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.23] - 2026-10-25
+
+### Added
+
+- The `fulcro` project workflows reference adds the files a project needs for its documented commands to work: a `package.json` with React 19.3.1, a `tests.edn` that points Kaocha at `src/test`, and a `karma.conf.js` for the `:ci` client test build. Without `tests.edn`, `clj -M:test` found no tests and still exited 0.
+- The project workflows reference proxies the dev HTTP server's `/api` requests to the Jetty server, enables guardrails in ClojureScript dev builds through the compiler's external configuration, and shows `--force-spawn` for a release build that must not run inside a running shadow-cljs server.
+- The Pathom server reference shows how to give a server mutation the client's symbol with `::pco/op-name`, and how to keep tempid remapping working with `m/returning`: Pathom 3 omits `:tempids` from a mutation join unless the query asks for it, so the reference adds an optional `:tempids` through the app's `:global-eql-transform`.
+- The mutations reference covers `m/returning` and `m/with-target` for merging a mutation's return value, and custom transit types with `transit/install-type-handler!`.
+- The routing reference lists the route lifecycle rules: route explicitly at startup, keep `:will-enter` free of side effects, and guard leaving a route with `:allow-route-change?` and `:route-denied`.
+- The state machines reference explains that handlers return the updated `env` and use `uism/apply-action`, `uism/trigger-remote-mutation`, `uism/load`, and `uism/transact` instead of calling `comp/transact!`.
+- The components reference shows how to rebuild a component's props from the client database at the REPL when its props are unexpectedly `nil`, following Jakub Holý's Fulcro Troubleshooting Decision Tree.
+- `/fulcro-fix` covers the `fulcro-spec` macros in its cljfmt guidance, shows the clj-kondo configuration that `fulcro-spec` tests need, and reports a Kaocha run that finds no tests as a failure.
+
+### Changed
+
+- The skills describe only Fulcro 3.10.0 and Pathom 3. Guidance for Pathom 2, union routers, `defui`, the Inspect preload that only logs "Inspect NOT installed", and notes about what individual Fulcro 3.8 and 3.9 releases changed are removed. The README states that Pathom 3 is published only as alpha releases, so the skills target the newest one.
+- `/fulcro-upgrade` reads the upstream `CHANGELOG.md` and the commit history between the project's release tag and the latest release tag for Fulcro, Fulcro Inspect, guardrails, and Fulcro RAD at run time, and lists the places in the project that the reported changes affect. It replaces the fixed notes for Fulcro 3.8, 3.9, and 3.10.
+- `/fulcro-upgrade` upgrades only to stable releases. When Clojars reports a release candidate as the latest release, the skill picks the newest stable version or asks.
+- The README requires Java 21, which shadow-cljs needs to build the Fulcro client, and names the Chrome Web Store as a source for the Fulcro Inspect extension. The store listing carries the same 4.1.0 release as the fulcro-inspect releases page.
+- The ecosystem table no longer lists `fulcro-incubator`, which depends on Fulcro 2.
+- The project workflows reference pins Logback 1.6.6, the latest release.
+- `/fulcro-fix` formats with the first cljfmt runner the project supports: a `:cljfmt` alias, the `lein-cljfmt` plugin, a `cljfmt` binary on `PATH`, or a `cljfmt` Clojure CLI tool. When none is installed, the format step reports that it was skipped and shows the `:cljfmt` alias to add, instead of failing and stopping the pipeline. The step also explains which configuration files cljfmt reads and how to pass paths to each runner.
+- The `:cljfmt` alias in the project workflows reference and in the `/fulcro-fix` hint uses `:replace-deps`, so a project dependency that conflicts with cljfmt or cannot be resolved does not stop formatting.
+- The `/fulcro-fix` signature lists the path and glob arguments that its arguments table already accepted: `/fulcro-fix [lint|format|test|advanced|dry] [--report] [all|<path>|<glob>]`.
+- `/fulcro-upgrade` also upgrades `fulcrologic/fulcro-spec`, updates its `:dev` and `:test` entries together, and reads the fulcro-spec changelog and the commits between its release tags.
+- `/fulcro-upgrade` reads the upstream changes before it writes `deps.edn` and before `--report` stops. Under `--report`, it also skips an artifact that is already at the latest stable version, never proposes a lower version, and prints a `Changes:` line that lists the changes that affect the project with their file matches. The final report carries the same line.
+- `/fulcro-upgrade` restores the saved `deps.edn` after a dependency, compile, or test failure, and its dependency refresh downloads the aliases that declare the upgraded artifacts.
+- Every command that the skills tell the agent to run starts with `clojure` instead of `clj`, for example `clojure -M:test` and `clojure -T:build uber`. The `clj` launcher exits with an error when `rlwrap` is not installed. The project workflows reference keeps `clj` for the two commands that start an interactive REPL.
+- The `fulcro` skill's trigger description fits the 1,024-character limit of the Agent Skills specification. It keeps every trigger term and leaves out the summary of covered topics, which the skill body already describes.
+
+### Fixed
+
+- The mutation example reads the server's return value from `mutation-return-value`. `result` in `ok-action` is the network result map with `:status-code` and `:body`, so `(:user result)` was always `nil`.
+- The mutation sections table explains that a custom `result-action` replaces the default result handling, so it must call `m/default-result-action!` or tempid rewriting, return-value merging, `ok-action`, and `error-action` stop working.
+- The loading reference reads load markers through the `[df/marker-table marker-id]` query and `df/loading?`. It named `df/get-loading-state`, which does not exist.
+- The forms reference and `fulcro-lenses` name the form-state validation API that exists, `fs/make-validator` and `fs/get-spec-validity`. They named `fs/validity`, `fs/form-field-valid?`, and `fs/valid?`, which do not exist.
+- `fulcro-lenses` no longer claims that `m/declare-mutation` validates mutation parameters or that Fulcro RAD regenerates and overwrites project source.
+- The project workflows reference adds `fulcro-spec` to the `:dev` alias, because shadow-cljs reads only that alias and the client test builds failed with "The required namespace "fulcro-spec.core" is not available".
+- The guardrails section enables ClojureScript checks the way the guardrails README describes. It said to set the flag under `:jvm-opts` in `shadow-cljs.edn`, which shadow-cljs ignores when it reads dependencies from `deps.edn`.
+- The middleware section no longer contradicts its own example about CSRF protection, and it shows how to send the anti-forgery token from the client while keeping the transit request encoding.
+- The Fulcro Inspect reference describes the EQL tab as running queries through the app's remotes and lists the DB Explorer and Statecharts tabs.
+- `/fulcro-fix` and `/fulcro-upgrade` detect client test builds by their `:karma` or `:node-test` target. They ran Karma for any `:test` build and fell back to a Node command that a browser test build cannot run.
+- `/fulcro-fix` describes how `karma-chrome-launcher` finds Chrome and how a running shadow-cljs server affects a release build, and no longer claims that Fulcro's own source uses cljfmt's `:cursive` indentation.
+- `/fulcro-upgrade` names the Fulcro RAD companion libraries by their Clojars coordinates (`com.fulcrologic/fulcro-rad-datomic`, `fulcro-rad-sql`, `fulcro-rad-semantic-ui`) and no longer claims that Clojars `latest_release` can name a SNAPSHOT build.
+- `/fulcro-upgrade`, its description, and its runtime metadata say that the skill upgrades to the latest stable version. They said the latest released version, which can be a release candidate. The skill picks the stable version by comparing version numbers and skips SNAPSHOT builds and every prerelease form on Clojars, such as `3.9.0-rc14`.
+- The `/fulcro-fix` dry step reports `SKIPPED`, the term that the other steps and the summary use. It said `SKIP`.
+- `/fulcro-fix` recommends the cljfmt configuration that matches Fulcrologic's own code: `:function-arguments-indentation :cursive` with the catch-all `:indents {#re ".*" [[:inner 0]]}`, which indents every form body and every `(:require` libspec by two spaces. The configuration it recommended before rewrote much of Fulcro's own source and most `fulcro-template` files. The skill also explains that Fulcro's own `.cljfmt.edn` writes the pattern as `#".*"`, which cljfmt cannot read from an `.edn` file, and it keeps the `:extra-indents` form for projects that use the community indentation.
+- The code examples in the `fulcro` references follow that configuration, so `cljfmt check` passes on code copied from them. The `ns` forms indent their libspecs by two spaces, and calls whose arguments continue on the next line indent them by two spaces.
+- The dry4clj alias that `/fulcro-fix` shows lines up its keys inside their maps.
+
 ## [0.1.22] - 2026-10-25
 
 ### Added

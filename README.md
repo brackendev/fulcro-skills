@@ -6,6 +6,8 @@ Skills follow the [Agent Skills](https://agentskills.io) open standard. Two auto
 
 This package layers on top of three companions: the host-neutral [clojure-skills](https://github.com/brackendev/clojure-skills) baseline, [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) for the ClojureScript client, and [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) for the JVM Clojure server. Install all four together so the `clojure` skill handles cross-dialect style, the `clojurescript` skill handles JavaScript interop and the shadow-cljs workflow, the `clojure-jvm` skill handles Java interop and the Clojure CLI / `tools.build` workflow, and this package adds Fulcro-aware components, mutations, queries, loads, routing, forms, UI state machines, and the Pathom 3 server.
 
+Pathom 3 is published only as alpha releases, so the skills target the newest published Pathom 3 release.
+
 ## Companion packages
 
 Seven sibling APM packages. This package layers on top of [clojure-skills](https://github.com/brackendev/clojure-skills), [clojurescript-skills](https://github.com/brackendev/clojurescript-skills), and [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) and covers the Fulcro framework. Install all four together for Fulcro projects. The Biff, Electric, and ClojureDart packages are not required for Fulcro work.
@@ -44,14 +46,14 @@ Update later with `apm update [-g]`. Remove with `apm uninstall brackendev/fulcr
 
 ## Requirements
 
-- [Clojure CLI](https://clojure.org/guides/install_clojure) and Java 17 or higher for any skill in this package. Projects built with shadow-cljs 3.x require Java 21 or higher.
+- [Clojure CLI](https://clojure.org/guides/install_clojure) and Java 21 or higher. shadow-cljs, which builds the Fulcro client, requires Java 21.
 - [Node and npm](https://nodejs.org/) for the ClojureScript build via [shadow-cljs](https://github.com/thheller/shadow-cljs) (recommended).
 - [clojure-skills](https://github.com/brackendev/clojure-skills) installed alongside, for the host-neutral baseline plus `/clj-fix` and `/clj-smells-fix`.
 - [clojurescript-skills](https://github.com/brackendev/clojurescript-skills) installed alongside, for the ClojureScript-specific guidance the `fulcro` skill defers to (JavaScript interop, externs, macro stage separation, JS numerics, `cljs.main` / `shadow-cljs` workflow).
 - [clojure-jvm-skills](https://github.com/brackendev/clojure-jvm-skills) installed alongside, for the JVM-specific guidance the Fulcro server defers to (Java interop, JVM exceptions, refs / agents / STM, the Clojure CLI / `tools.build` / `clj-kondo` / `cljfmt` / `test-runner` / nREPL workflow).
 - [clj-kondo](https://github.com/clj-kondo/clj-kondo) for the lint steps in the user-invoked skills below.
 - The `fulcro-fix` dry step requires a [dry4clj](https://github.com/unclebob/dry4clj) `:dry4clj` alias in `deps.edn`. dry4clj is not published to Clojars, so the alias uses a Git coordinate. Without the alias, the dry step reports that it was skipped and shows the alias to add.
-- The Fulcro Inspect Chrome extension or Electron app for development, installed from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases). The old Chrome Web Store extension does not work with Fulcro 3.8 or later. The project also needs the `fulcro-inspect` library, its preload, and the call that registers the app, which the `fulcro` skill's Fulcro Inspect section describes. The Inspect tab only appears when the extension or app is installed.
+- The Fulcro Inspect Chrome extension or Electron app for development. The extension is available from the Chrome Web Store and from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases), and the Electron app from the releases page. The project also needs the `fulcro-inspect` library, its preload, and the call that registers the app, which the `fulcro` skill's Fulcro Inspect reference describes. The Inspect tab only appears when the extension or app is installed.
 
 ## Command guide
 
@@ -60,7 +62,7 @@ A quick guide to every slash command. The detailed entries under [Skills](#skill
 | Command | Use it when | What it does |
 |---------|-------------------|--------------|
 | `/fulcro-fix` | Lint, format, tests, or the advanced build need attention | Runs the fix pipeline across client and server, rewriting files in the format step with `cljfmt fix` |
-| `/fulcro-upgrade` | The Fulcro version is behind | Upgrades `com.fulcrologic/fulcro` and related Fulcro libraries to the latest release, shows the release history for minor and major jumps, and verifies compile and tests |
+| `/fulcro-upgrade` | The Fulcro version is behind | Reads the upstream changelog and commit history for the version range, upgrades `com.fulcrologic/fulcro` and the related Fulcro libraries, including `fulcro-spec`, to their latest stable releases, and verifies compile and tests |
 
 ## Skills
 
@@ -68,20 +70,21 @@ User-invocable skills in this package share an argument grammar, scope vocabular
 
 ### Quality and upgrades
 
-#### `/fulcro-fix [lint|format|test|advanced|dry] [--report] [all]`
+#### `/fulcro-fix [lint|format|test|advanced|dry] [--report] [all|<path>|<glob>]`
 
-Fix a Fulcro project. Runs lint, format, test, advanced-compilation, and duplicate-form checks. Defaults to the full sequence and writes formatting in place via `cljfmt fix`. Each step is also addressable on its own. The `test` step aggregates server (Kaocha) and client (shadow-cljs / Karma) suites; the `advanced` step runs a shadow-cljs release build as a production-build sanity check. Pass `--report` to swap the format step for non-writing `cljfmt check`; lint, test, advanced, and dry are pure-read of source regardless.
+Fix a Fulcro project. Runs lint, format, test, advanced-compilation, and duplicate-form checks. Defaults to the full sequence and writes formatting in place via `cljfmt fix`. Each step is also addressable on its own, and a path or glob limits the lint, format, and dry steps to those files. The format step runs cljfmt through a `:cljfmt` alias, the `lein-cljfmt` plugin, a `cljfmt` binary on `PATH`, or a `cljfmt` Clojure CLI tool, whichever it finds first, and reports that it was skipped, with the alias to add, when none is installed. The `test` step aggregates server (Kaocha) and client (shadow-cljs / Karma) suites, and the `advanced` step runs a shadow-cljs release build as a production-build sanity check. Pass `--report` to replace the format step's write with non-writing `cljfmt check`. The lint, test, advanced, and dry steps are pure-read of source regardless.
 
 ```bash
 /fulcro-fix
 /fulcro-fix lint
+/fulcro-fix format src/main/app/ui
 /fulcro-fix advanced
 /fulcro-fix --report
 ```
 
 #### `/fulcro-upgrade [--report] [all]`
 
-Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest released version on Clojars. Also updates `com.fulcrologic/fulcro-rad`, `com.fulcrologic/guardrails`, and `com.fulcrologic/fulcro-inspect` when the project declares them. Refreshes dependencies, runs compile + tests, and refreshes clj-kondo imports. For minor and major version jumps, it shows the upstream commit history between release tags, flags known migration steps (such as the 3.8 Inspect setup and the 3.9 React 18 requirement), and asks for confirmation before applying the upgrade. Reverts the version on compile or test failure. Pass `--report` to print the current and latest versions without writing or running anything.
+Upgrade the `com.fulcrologic/fulcro` dependency in `deps.edn` to the latest stable version on Clojars. Also updates `com.fulcrologic/fulcro-rad`, `com.fulcrologic/guardrails`, `com.fulcrologic/fulcro-inspect`, and `fulcrologic/fulcro-spec` when the project declares them, including both `fulcro-spec` entries in the `:dev` and `:test` aliases. It skips an artifact that is already at the latest stable version and never lowers a version. Before it writes a new version, it reads the upstream `CHANGELOG.md` and the commit history between the project's release tag and the latest release tag, and it lists the places in the project that the reported changes affect. For minor and major version jumps, it asks for confirmation before applying the upgrade. It then refreshes dependencies, runs compile + tests, and refreshes clj-kondo imports, and it restores the original `deps.edn` on a dependency, compile, or test failure. Pass `--report` to print the current and latest versions and the changes that affect the project without writing `deps.edn` or running the compile and tests.
 
 ```bash
 /fulcro-upgrade
@@ -94,7 +97,7 @@ These skills activate from conversation context. They cannot be invoked directly
 
 | Skill | Triggers |
 |-------|----------|
-| **fulcro** | `.cljs` / `.cljc` files containing `com.fulcrologic.fulcro.*`, `com.fulcrologic.fulcro-css.*`, `com.fulcrologic.rad.*`, `com.wsscode.pathom3.*` (or legacy `com.wsscode.pathom.*`); the macros `defsc`, `defmutation`, `defrouter`, `defresolver`; the helpers `df/load!`, `df/load-field!`, `dr/change-route!`, `comp/get-query`, `comp/get-ident`, `comp/get-initial-state`, `comp/computed`, `comp/factory`, `fs/*`, `fo/*`, `uism/*`; ident vectors `[:table/id value]` and `[:component/id ::ComponentName]`; `shadow-cljs.edn` with a `:main` build that requires Fulcro; `deps.edn` containing `com.fulcrologic/fulcro`, `com.fulcrologic/fulcro-rad`, `com.fulcrologic/guardrails`, or `com.wsscode/pathom3`; transit endpoints `/api`; Fulcro Inspect preloads; or any mention of Fulcro, fulcrologic, Fulcro Inspect, or Fulcro RAD. Covers `defsc` component definition, idents and the normalized client database, EQL queries, mutations and their `action` / `remote` / `ok-action` / `error-action` sections, `df/load!` and load targeting, dynamic routing, forms, UI state machines, the Pathom 3 server resolver shape, and the Fulcro Inspect workflow. Defers to the [clojure](https://github.com/brackendev/clojure-skills) skill for host-neutral style, to the [clojurescript](https://github.com/brackendev/clojurescript-skills) skill for JavaScript interop and the CLJS workflow, and to the [clojure-jvm](https://github.com/brackendev/clojure-jvm-skills) skill for Java interop on the server and the JVM tooling workflow. The skill opens with Iron Laws (FUL-1 through FUL-5), rules that prevent stale UIs, silent data loss, and security holes. The agent does not write code that breaks them, and it reports a violation it finds in existing code before changing it. |
+| **fulcro** | `.cljs` / `.cljc` files containing `com.fulcrologic.fulcro.*`, `com.fulcrologic.fulcro-css.*`, `com.fulcrologic.rad.*`, `com.wsscode.pathom3.*`; the macros `defsc`, `defmutation`, `defrouter`, `defresolver`; the helpers `df/load!`, `df/load-field!`, `dr/change-route!`, `comp/get-query`, `comp/get-ident`, `comp/get-initial-state`, `comp/computed`, `comp/factory`, `fs/*`, `fo/*`, `uism/*`; ident vectors `[:table/id value]` and `[:component/id ::ComponentName]`; `shadow-cljs.edn` with a `:main` build that requires Fulcro; `deps.edn` containing `com.fulcrologic/fulcro`, `com.fulcrologic/fulcro-rad`, `com.fulcrologic/guardrails`, or `com.wsscode/pathom3`; transit endpoints `/api`; Fulcro Inspect preloads; or any mention of Fulcro, fulcrologic, Fulcro Inspect, or Fulcro RAD. Covers `defsc` component definition, idents and the normalized client database, EQL queries, mutations and their `action` / `remote` / `ok-action` / `error-action` sections, `df/load!` and load targeting, dynamic routing, forms, UI state machines, the Pathom 3 server resolver shape, and the Fulcro Inspect workflow. Defers to the [clojure](https://github.com/brackendev/clojure-skills) skill for host-neutral style, to the [clojurescript](https://github.com/brackendev/clojurescript-skills) skill for JavaScript interop and the CLJS workflow, and to the [clojure-jvm](https://github.com/brackendev/clojure-jvm-skills) skill for Java interop on the server and the JVM tooling workflow. The skill opens with Iron Laws (FUL-1 through FUL-5), rules that prevent stale UIs, silent data loss, and security holes. The agent does not write code that breaks them, and it reports a violation it finds in existing code before changing it. |
 | **fulcro-lenses** | Auto-triggers alongside the [code-lenses](https://github.com/brackendev/code-lenses) plugin in Fulcro work. Layers on top of `clojure-lenses` (in `clojure-skills`) and `clojurescript-lenses` (in `clojurescript-skills`) and records only the Fulcro-specific deltas: the normalized client database, ident composition, mutations as data, EQL queries, the `action` / `remote` / `ok-action` / `error-action` split, `df/load!` over hand-rolled merges, dynamic routing, form-state algorithms, UI state machines, and the Pathom 3 server. Covers the four default code-lenses philosophies (grug, Honest Code, Tidy First, Parse Don't Validate) and the two opt-in philosophies (APOSD, Legacy Code) that activate when their lens is added with `+aposd` or `+legacy-code` or invoked directly. |
 
 ## Contributing

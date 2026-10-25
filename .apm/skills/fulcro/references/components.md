@@ -9,8 +9,8 @@ Part of the `fulcro` skill, for Fulcro 3 applications.
 ```clojure
 (ns app.ui.person
   (:require
-   [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
-   [com.fulcrologic.fulcro.dom :as dom]))
+    [com.fulcrologic.fulcro.components :as comp :refer [defsc]]
+    [com.fulcrologic.fulcro.dom :as dom]))
 
 (defsc Person [this {:person/keys [id name email]}]
   {:query         [:person/id :person/name :person/email]
@@ -28,7 +28,7 @@ Equivalent template forms are accepted for `:ident` (`:ident :person/id`), `:ini
 
 The `:ident` lambda takes no arguments. It sees `this` and the names bound by the argument list, so `id` above comes from the `{:person/keys [id ...]}` destructuring. The `:query` lambda sees only `this`. Writing `props` inside the lambda only works when the argument list binds `props`, for example `[this {:person/keys [id] :as props}]`. The `:initial-state` lambda sees only its own `params` argument.
 
-A docstring goes between the component name and the argument list: `(defsc Person "A person row." [this props] {...} ...)`. In `(defsc Person [this props] "A person." {:query [...]} ...)`, the string and the options map are body forms. Fulcro 3.10 and later reject that shape at compile time with "Docstring is in the wrong position". Earlier versions compile the component with no query, ident, or initial state, and it fails at runtime in confusing ways, so check for a misplaced docstring whenever a component's props are unexpectedly empty.
+A docstring goes between the component name and the argument list: `(defsc Person "A person row." [this props] {...} ...)`. A string placed after the argument list, as in `(defsc Person [this props] "A person." {:query [...]} ...)`, fails compilation with "Docstring is in the wrong position". Move it before the argument list.
 
 | Option | Purpose |
 |--------|---------|
@@ -49,7 +49,7 @@ The factory wraps a component for rendering. Build it once per namespace:
 (map ui-person (sort-by :person/name people))
 ```
 
-`:keyfn` returns React's `key` for each rendered instance. Since Fulcro 3.9, a factory for a component that has an `:ident` defaults the key to the ident's second element as a string, so `{:keyfn :person/id}` above is redundant but harmless. Precedence runs from a `:react-key` entry in the props, to an explicit `:keyfn`, to the ident default. Components without an ident still need `:keyfn` when rendered in a list, or React logs a missing-key warning and re-renders more than necessary.
+`:keyfn` returns React's `key` for each rendered instance. A factory for a component that has an `:ident` defaults the key to the ident's second element as a string, so `{:keyfn :person/id}` above is redundant but harmless. Precedence runs from a `:react-key` entry in the props, to an explicit `:keyfn`, to the ident default. Components without an ident still need `:keyfn` when rendered in a list, or React logs a missing-key warning and re-renders more than necessary.
 
 ## Idents and Normalization
 
@@ -105,3 +105,16 @@ Compose parent queries from child queries:
 ```
 
 The compiler does not validate that the query's shape matches what the server (or initial-state) produces. Adding a field to `:query` without updating `:initial-state` or the Pathom resolver produces a missing-data render, not a compile error or an exception. Cross-check the three shapes (query, initial-state, server response) after every component refactor and whenever something fails to display. Fulcro Inspect's DB tab is the fastest way to confirm that the normalized data matches.
+
+When the data is in the database but a component's props are `nil`, rebuild the props tree at the REPL and find where it stops. Jakub Holý's [Fulcro Troubleshooting Decision Tree](https://blog.jakubholy.net/2020/troubleshooting-fulcro/) recommends this check:
+
+```clojure
+(require
+  '[com.fulcrologic.fulcro.algorithms.denormalize :as fdn]
+  '[com.fulcrologic.fulcro.application :as app])
+
+(let [state (app/current-state SPA)]
+  (fdn/db->tree (comp/get-query Root) state state))
+```
+
+A missing branch usually means a join in some parent query was written by hand instead of with `comp/get-query`, or that a parent's `:initial-state` does not include the child. The two `:initial-state` forms compose children differently. In the template map, a join key's value (`{:root/router {}}`) is replaced by that child's initial state, with the map as its parameters. The lambda form does nothing automatically, so it must call `(comp/get-initial-state Child params)` for each join.
