@@ -32,7 +32,7 @@ This skill applies when the code uses Fulcro on the client (`com.fulcrologic.ful
 
 For the deepest framework reference, [The Fulcro Developer's Guide](https://book.fulcrologic.com/) is the canonical source. Cross-check API specifics against the [Fulcro source](https://github.com/fulcrologic/fulcro) at the release tag the project uses. Fulcro tags each release as `fulcro-<version>`, for example `fulcro-3.10.0`. The upstream `CHANGELOG.md` says that it "is often not updated," so read the commit history between release tags for recent changes. Check blog posts and tutorials against the source, because many of them describe forms that current Fulcro does not provide.
 
-This skill targets Fulcro 3.10.0. Fulcro mounts the app with React's `createRoot` and requires React 18 or later. Its own test build uses React 19, and `references/project-workflows.md` pins React 19.3.1.
+This skill targets Fulcro 3.10.1. Fulcro mounts the app with React's `createRoot` and requires React 18 or later. Its own test build uses React 19, and `references/project-workflows.md` pins React 19.3.1.
 
 ## Iron Laws
 

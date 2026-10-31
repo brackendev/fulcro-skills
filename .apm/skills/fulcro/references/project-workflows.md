@@ -56,25 +56,25 @@ File naming uses underscores; namespace declarations use hyphens. `src/main/app/
 
 ## `deps.edn`
 
-A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the usual dev / test / build aliases. The versions below were current on 2026-10-25 (Fulcro 3.10.0). Pathom 3 publishes only alpha releases, and the pin is the newest one. Check [Clojars](https://clojars.org/) and Maven Central for newer releases before pinning.
+A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the usual dev / test / build aliases. The versions below were current on 2026-10-31 (Fulcro 3.10.1). Pathom 3 publishes only alpha releases, and the pin is the newest one. Check [Clojars](https://clojars.org/) and Maven Central for newer releases before pinning.
 
 ```clojure
 {:paths ["src/main" "resources"]
 
  :deps  {org.clojure/clojure         {:mvn/version "1.12.6"}
          org.clojure/clojurescript   {:mvn/version "1.12.145"}
-         com.fulcrologic/fulcro      {:mvn/version "3.10.0"}
+         com.fulcrologic/fulcro      {:mvn/version "3.10.1"}
          com.fulcrologic/guardrails  {:mvn/version "1.3.4"}
          com.wsscode/pathom3         {:mvn/version "2025.01.16-alpha"}
          metosin/muuntaja            {:mvn/version "0.6.12"}
          ring/ring-jetty-adapter     {:mvn/version "1.15.6"}
          ring/ring-defaults          {:mvn/version "0.7.1"}
-         com.cognitect/transit-clj   {:mvn/version "1.1.363"}
+         com.cognitect/transit-clj   {:mvn/version "1.1.367"}
          ch.qos.logback/logback-classic {:mvn/version "1.6.6"}}
 
  :aliases
  {:dev   {:extra-paths ["src/dev" "src/test"]
-          :extra-deps  {thheller/shadow-cljs           {:mvn/version "3.5.7"}
+          :extra-deps  {thheller/shadow-cljs           {:mvn/version "3.5.10"}
                         com.fulcrologic/fulcro-inspect {:mvn/version "1.0.5"}
                         binaryage/devtools             {:mvn/version "1.0.7"}
                         org.clojure/tools.namespace    {:mvn/version "1.5.1"}
@@ -96,7 +96,7 @@ A minimal Fulcro project pulls in the framework, a server-side Pathom 3, and the
             :main-opts  ["-m" "dry4clj.core"]}}}
 ```
 
-shadow-cljs 3.x requires Java 21 or later. Keep the `thheller/shadow-cljs` version in `deps.edn` equal to the `shadow-cljs` npm package version in `package.json`. `fulcro-spec` appears in both `:dev` and `:test`: shadow-cljs reads only the `:dev` alias, so the client test builds need it there, and Kaocha runs with `:test`. Keep the two versions equal. `/fulcro-upgrade` updates both. Its Clojars group is `fulcrologic`, not `com.fulcrologic`. `dry4clj` is not published to Clojars, so the alias uses a Git coordinate pinned to a commit. The `:cljfmt` alias uses `:replace-deps`, so the formatter runs without the project's dependencies, which it does not need.
+shadow-cljs 3.x requires Java 21 or later. Pin each copy of shadow-cljs to the newest release in its own registry: `thheller/shadow-cljs` in `deps.edn` from Clojars, and the `shadow-cljs` npm package in `package.json` from npm. With `:deps` in `shadow-cljs.edn`, as below, the npm package only launches the build (`starting via "clojure"`), and the compiler jar comes from `deps.edn`. The `jar-version` that the npm package names is used only when `shadow-cljs.edn` declares its own `:dependencies` instead. npm can lag behind Clojars: on 2026-10-31 Clojars had 3.5.10 and npm's newest release was 3.5.8, because 3.5.9 and 3.5.10 were never published to npm. Those two releases changed only the JVM `com.thheller/shadow-http` dependency, and the pairing built the `:main` dev and release builds with no warnings. When the two registries differ, read the release notes for the versions npm lacks, and keep the pairing only when those releases change nothing on the npm side. The 3.5.10 jar with the 3.5.8 npm package is an accepted pairing on that basis, reviewed on 2026-10-31. When npm publishes 3.5.10 or a later release, pin both copies to the newest release they share again. Never pin a version that a registry does not publish. `fulcro-spec` appears in both `:dev` and `:test`: shadow-cljs reads only the `:dev` alias, so the client test builds need it there, and Kaocha runs with `:test`. Keep the two versions equal. `/fulcro-upgrade` updates both. Its Clojars group is `fulcrologic`, not `com.fulcrologic`. `dry4clj` is not published to Clojars, so the alias uses a Git coordinate pinned to a commit. The `:cljfmt` alias uses `:replace-deps`, so the formatter runs without the project's dependencies, which it does not need.
 
 ## `package.json`, `tests.edn`, and `karma.conf.js`
 
@@ -105,7 +105,7 @@ shadow-cljs 3.x requires Java 21 or later. Keep the `thheller/shadow-cljs` versi
   "name": "my-app",
   "private": true,
   "devDependencies": {
-    "shadow-cljs": "3.5.7"
+    "shadow-cljs": "3.5.8"
   },
   "dependencies": {
     "react": "19.3.1",

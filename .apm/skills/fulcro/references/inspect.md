@@ -7,7 +7,7 @@ Part of the `fulcro` skill, for Fulcro 3 applications.
 Fulcro Inspect is the single highest-leverage debugging tool. Inspect is a library that the application installs explicitly at startup. The setup has four parts, following the [fulcro-inspect README](https://github.com/fulcrologic/fulcro-inspect):
 
 1. Install the Fulcro Inspect Chrome extension from the Chrome Web Store or as `fulcro-inspect-chrome-<version>.zip` from the [fulcro-inspect releases page](https://github.com/fulcrologic/fulcro-inspect/releases), or install the Electron app from the same releases page. Open a new tab or restart Chrome after installing the extension.
-2. Add `com.fulcrologic/fulcro-inspect` to the development alias in `deps.edn` (it brings in `com.fulcrologic/fulcro-devtools-remote`). Fulcro 3.10.0 already depends on `fulcro-inspect` 1.0.5, so the entry pins the version rather than adding a new library. Point shadow-cljs at that alias with `:deps {:aliases [:dev]}`.
+2. Add `com.fulcrologic/fulcro-inspect` to the development alias in `deps.edn` (it brings in `com.fulcrologic/fulcro-devtools-remote`). Fulcro 3.10.1 already depends on `fulcro-inspect` 1.0.5, so the entry pins the version rather than adding a new library. Point shadow-cljs at that alias with `:deps {:aliases [:dev]}`.
 3. Add the preload for the chosen front end:
 
    ```clojure

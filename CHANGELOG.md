@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.28] - 2026-10-31
+
+### Changed
+
+- The README companion packages table and introduction add [babashka-skills](https://github.com/brackendev/babashka-skills), the new Babashka host package, which layers on clojure-skills.
+- `CONTRIBUTING.md` names only this package's brand color and no longer lists the color of every other Clojure-family package. The coordinator's drift check now confirms that each skill's `agents/openai.yaml` uses that color and that no two packages share one.
+- The `apm.yml` description no longer lists code-lenses translation, which this package stopped shipping when it removed its lenses skill.
+- The skills target Fulcro 3.10.1. It fixes the order of batched query results and keeps a batch from failing silently when the response is not a sequence or not a 200. No documented API changed.
+- `fulcro/references/project-workflows.md` pins `com.fulcrologic/fulcro` 3.10.1, `com.cognitect/transit-clj` 1.1.367, `thheller/shadow-cljs` 3.5.10 from Clojars, and the `shadow-cljs` npm package 3.5.8, the newest release on npm. The two shadow-cljs pins now follow each registry's newest release instead of being kept equal, because npm has no 3.5.9 or 3.5.10. With `:deps` in `shadow-cljs.edn`, the npm package only launches the build, and the dev and release builds compiled with no warnings. The reference records this pairing as accepted and says to pin both copies to the same release again once npm publishes 3.5.10 or later.
+
 ## [0.1.27] - 2026-10-31
 
 ### Removed
