@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.27] - 2026-10-31
+
+### Removed
+
+- The `fulcro-lenses` skill. The code-lenses package now detects the stack of the code under review and applies each lens to it through general rules, so a separate translation skill per language is no longer needed and its copy of code-lenses guidance can no longer drift.
+
+### Added
+
+- `fulcro/references/components.md` states that a component's render body must have no side effects, and explains that component-local state is not shown by Fulcro Inspect or the transaction history.
+
 ## [0.1.26] - 2026-10-31
 
 ### Changed

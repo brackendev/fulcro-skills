@@ -38,7 +38,9 @@ A docstring goes between the component name and the argument list: `(defsc Perso
 | `:pre-merge` | Transform a server response before normalization |
 | `:use-hooks?` | `true` renders a function component that can use React hooks. `:pure` also memoizes it with React `memo`. Switching to or from `:pure` requires a browser reload. |
 | `:componentDidMount` / `:componentWillUnmount` | Lifecycle hooks on the class form |
-| `:initLocalState` | Component-local mutable state (rare; prefer the normalized DB) |
+| `:initLocalState` | Component-local mutable state (rare; prefer the normalized DB, because local state is not part of the app database, so Fulcro Inspect and the transaction history do not show it) |
+
+The render body is a function of props and must not have side effects: no `js/fetch`, no `localStorage` access, and no `swap!` on app state. React can call render many times. Start effects from a mutation, from `df/load!`, or from a lifecycle hook.
 
 The factory wraps a component for rendering. Build it once per namespace:
 

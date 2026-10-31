@@ -2,7 +2,7 @@
 
 This document defines the argument grammar, scope vocabulary, and mutation defaults that every user-invocable skill in `fulcro-skills` follows. A reader who learns one skill should be able to predict every other skill. New skills follow this document.
 
-These conventions apply to user-invocable skills (`user-invocable: true` in frontmatter). Model-invocable reference skills with no argument surface (currently `fulcro` and `fulcro-lenses`) carry no argument grammar and are exempt from rules 1 and 2.
+These conventions apply to user-invocable skills (`user-invocable: true` in frontmatter). Model-invocable reference skills with no argument surface (currently `fulcro`) carry no argument grammar and are exempt from rules 1 and 2.
 
 ## The four rules
 
@@ -87,7 +87,7 @@ A skill is classified by its actual behavior, not by its name. If the name and b
 | `/fulcro-fix`          | Mutating        | Yes                    | `format` step runs `cljfmt fix` by default, through the first cljfmt runner the project supports. `--report` replaces it with `cljfmt check`. `lint`, `test`, `advanced`, and `dry` are pure-read of source regardless. The `advanced` step writes the shadow-cljs release output under `resources/public/js/` (build artifact, not source). |
 | `/fulcro-upgrade`       | Mutating        | Yes                    | Rewrites `:mvn/version` for the Fulcro artifacts in `deps.edn`, including both `fulcrologic/fulcro-spec` entries, after reading the upstream changes. `--report` prints the current and latest stable versions and the changes that affect the project without writing. |
 
-The model-only reference skills (`fulcro`, `fulcro-lenses`) have no argument surface and are not classified here.
+The model-only reference skill (`fulcro`) has no argument surface and are not classified here.
 
 ## Section structure
 
