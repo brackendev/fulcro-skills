@@ -63,14 +63,17 @@ When the [code-lenses](https://github.com/brackendev/code-lenses) plugin is acti
 
 ## Honest Code
 
-- Mutations are data. `(login {:email "alice@example.com"})` returns an EQL data structure; `comp/transact!` interprets it. The data form is honest; hidden side effects in random `swap!` calls are dishonest.
-- Components render pure functions of props. The render body should not perform side effects (no `js/fetch`, no `localStorage`, no atom swaps). Side effects belong in mutation `action` / `ok-action` bodies, in `componentDidMount`, or in `:use-hooks?` effects.
-- The normalized client database is the single source of truth. State that lives outside the DB (component-local state, top-level `defonce` atoms) is dishonest because the framework cannot reason about it, Fulcro Inspect cannot show it, and `with-redefs` cannot stub it.
-- Pathom resolvers declare what they need (`::pco/input`) and what they produce (`::pco/output`). The declaration is the honest contract; the body honors it. Resolvers that quietly read or write data outside their declared boundary are dishonest.
-- `df/load!` is honest data flow. The call declares "this data is wanted at this path"; the framework fetches, normalizes, merges, and notifies. Hand-rolled merges into the state atom (`swap! state assoc-in [:person/id 42] new-person`) bypass normalization and break the honest data flow.
-- `defmutation` sections are honest about timing. `action` runs synchronously, `remote` describes wire intent, `ok-action` runs after a successful response, `error-action` runs after a failure. Code that does network work inside `action` is dishonest about when it runs.
-- Let It Crash, Fulcro edition: surface errors through `error-action` or a UISM `:event/failure` transition; do not swallow them silently. Network errors should fire `ok-action` with a documented `:status :failed` payload only when the server intentionally returns failure as data.
-- The Fulcro client app is a single value at any moment. The state atom dereferences to a plain Clojure map; Fulcro Inspect's DB tab is that value. Test by querying that map, not by mocking framework internals.
+Cite principles by number, as `clojure-lenses` describes. Fulcro adds these translations:
+
+- **P03 (I/O at the Boundary):** Mutations are data. `(login {:email "alice@example.com"})` returns an EQL data structure, `comp/transact!` interprets it, and the mutation's `remote` section is where network I/O is described. Side effects hidden in ad hoc `swap!` calls are dishonest, and Iron Law FUL-1 forbids them.
+- **P02 and P03:** Components render pure functions of props. The render body performs no side effects (no `js/fetch`, no `localStorage`, no atom swaps). Side effects belong in mutation `action` and `ok-action` bodies.
+- **P22 (Declarative Equivalents Over Framework Lifecycle Hooks):** `componentDidMount` and `:use-hooks?` effects are the lifecycle hooks that P22 replaces. When a component needs one, report it as a departure from P22 with its reason, not as conformance.
+- **P05 (DOM as State):** The normalized client database is a client-side copy of server state, which P05 replaces with server-rendered HTML, so a Fulcro app departs from P05. Report that as a departure with its reason. Within Fulcro, keep all client state in the normalized database. State outside it (component-local state, top-level `defonce` atoms) is a second copy that the framework cannot reason about and Fulcro Inspect cannot show.
+- **P11 and P14:** Pathom resolvers declare what they need (`::pco/input`) and what they produce (`::pco/output`). The declaration is the contract, the body honors it, and the interior trusts it instead of re-checking. Resolvers that read or write data outside their declared boundary are dishonest.
+- **Data flow (Iron Law FUL-1):** `df/load!` declares "this data is wanted at this path", and the framework fetches, normalizes, merges, and notifies. Hand-rolled merges into the state atom (`swap! state assoc-in [:person/id 42] new-person`) bypass normalization.
+- **P03 and timing:** `defmutation` sections state when each part runs. `action` runs synchronously, `remote` describes wire intent, `ok-action` runs after a successful response, and `error-action` runs after a failure. Network work inside `action` hides when the I/O runs.
+- **P08 and P24:** Surface errors through `error-action` or a UISM `:event/failure` transition, and do not swallow them. When the server intentionally returns failure as data, a documented `:status :failed` payload reaches `ok-action` as a value that names the outcome.
+- **P10:** The Fulcro client app is a single value at any moment. The state atom dereferences to a plain Clojure map, and Fulcro Inspect's DB tab is that value. Test by querying that map, not by mocking framework internals.
 
 ## Legacy Code
 

@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.26] - 2026-10-31
+
+### Changed
+
+- The Honest Code section of `fulcro-lenses` cites the Honest Code Principles by number (P01-P25), which the code-lenses `honest-code` skill now follows, instead of the construct names code-lenses no longer uses. It reports the normalized client database as a departure from P05 and lifecycle effects as a departure from P22, instead of describing them as conforming, and it no longer suggests that `with-redefs` stubbing is a reason to keep state in the database.
+
 ## [0.1.25] - 2026-10-29
 
 ### Added
