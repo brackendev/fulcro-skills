@@ -68,6 +68,7 @@ The Iron Laws and Key Rules are the short form. Each reference file below holds 
 | Pathom 3 resolvers, the server parser, or securing the API | `references/pathom-server.md` |
 | Fulcro Inspect setup or debugging with Inspect | `references/inspect.md` |
 | Project layout, `deps.edn` and `shadow-cljs.edn`, builds, the server, or the development workflow | `references/project-workflows.md` |
+| Deciding where state, a change, or a call to the server belongs, writing a mutation's logic as a function of the state map, or choosing between the database and component-local state | `references/simple-design.md` |
 
 ## Project Workflow
 

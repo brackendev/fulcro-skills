@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.1.29] - 2026-11-15
+
+### Added
+
+- `fulcro` skill: the `references/simple-design.md` reference shows how Fulcro 3 carries out Key Rule 20 of the `clojure` skill ("Choose simple over easy"). A table lists the concerns that Fulcro already keeps apart, with the Fulcro construct for each and the second mechanism not to build beside it. The reference covers changes written as functions of the state map and applied by a mutation, the transaction as the queue between a component and the server, and data declarations for queries, idents, resolvers, and flows. Its mutation example and test were run on the JVM against Fulcro 3.10.1.
+
 ## [0.1.28] - 2026-10-31
 
 ### Changed
